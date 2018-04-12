@@ -77,7 +77,7 @@ public class BlockchainManager {
         this.USER_AGENT = context.getPackageName()+"_AGENT";
         this.blockchainManagerListeners = new ArrayList<>();
     }
-
+//TEST COMMIT
     public void init(BlockStore blockStore,File blockStoreDir,String blockStoreFilename,boolean blockStoreFileExists){
         synchronized (this) {
 
