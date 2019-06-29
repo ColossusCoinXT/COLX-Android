@@ -9,6 +9,9 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.VIBRATE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
 
     <application
@@ -18,6 +21,10 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:name=".ColxApplication">
+        <uses-library
+            android:name="org.apache.http.legacy"
+            android:required="false" />
+
         <activity android:name=".ui.splash_activity.SplashActivity"  android:screenOrientation="portrait">
 
         </activity>
@@ -94,7 +101,9 @@
             android:taskAffinity=""
             android:theme="@android:style/Theme.Dialog" />
 
-        <service android:name=".service.PivxWalletService" />
+        <service android:name=".service.PivxWalletService"
+            android:exported="false"
+            android:enabled="true"/>
 
         <provider
             android:name="android.support.v4.content.FileProvider"

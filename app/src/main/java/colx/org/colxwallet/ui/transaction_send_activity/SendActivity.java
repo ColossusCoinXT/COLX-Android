@@ -866,7 +866,14 @@ public class SendActivity extends BaseActivity implements View.OnClickListener {
         Intent intent = new Intent(SendActivity.this, PivxWalletService.class);
         intent.setAction(ACTION_BROADCAST_TRANSACTION);
         intent.putExtra(DATA_TRANSACTION_HASH,transaction.getHash().getBytes());
-        startService(intent);
+
+        pivxApplication.startPivxService();
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+//            startForegroundService(intent);
+//        } else {
+//            startService(intent);
+//        }
+
         Toast.makeText(SendActivity.this,R.string.sending_tx,Toast.LENGTH_LONG).show();
         finish();
         NavigationUtils.goBackToHome(this);

@@ -1,6 +1,9 @@
 package colx.org.colxwallet.service;
 
+import android.annotation.SuppressLint;
 import android.app.AlarmManager;
+import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -8,6 +11,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Binder;
@@ -15,6 +20,7 @@ import android.os.Build;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.PowerManager;
+import android.os.SystemClock;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
@@ -39,6 +45,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.math.BigDecimal;
+import java.util.Date;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -48,8 +55,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import chain.BlockchainManager;
 import chain.BlockchainState;
 import chain.Impediment;
-import pivtrum.listeners.AddressListener;
+import colx.org.colxwallet.AppPreference;
 import colx.org.colxwallet.ColxApplication;
+import colx.org.colxwallet.HardcodedConstants;
 import colx.org.colxwallet.R;
 import colx.org.colxwallet.module.PivxContext;
 import colx.org.colxwallet.module.PivxModuleImp;
@@ -57,9 +65,10 @@ import colx.org.colxwallet.module.store.SnappyBlockchainStore;
 import colx.org.colxwallet.rate.CoinMarketCapApiClient;
 import colx.org.colxwallet.rate.RequestPivxRateException;
 import colx.org.colxwallet.rate.db.PivxRate;
+import colx.org.colxwallet.ui.initial.InitialActivity;
 import colx.org.colxwallet.ui.wallet_activity.WalletActivity;
 import colx.org.colxwallet.utils.AppConf;
-import colx.org.colxwallet.utils.CrashReporter;
+import pivtrum.listeners.AddressListener;
 
 import static colx.org.colxwallet.module.PivxContext.CONTEXT;
 import static colx.org.colxwallet.service.IntentsConstants.ACTION_ADDRESS_BALANCE_CHANGE;
@@ -131,14 +140,12 @@ public class PivxWalletService extends Service{
     };
 
     private final class PeerConnectivityListener implements PeerConnectedEventListener, PeerDisconnectedEventListener{
-
         @Override
         public void onPeerConnected(Peer peer, int i) {
             //todo: notify peer connected
             log.info("Peer connected: "+peer.getAddress());
             broadcastPeerConnected();
         }
-
         @Override
         public void onPeerDisconnected(Peer peer, int i) {
             //todo: notify peer disconnected
@@ -147,7 +154,6 @@ public class PivxWalletService extends Service{
     }
 
     private final PeerDataEventListener blockchainDownloadListener = new AbstractPeerDataEventListener() {
-
         @Override
         public void onBlocksDownloaded(final Peer peer, final Block block, final FilteredBlock filteredBlock, final int blocksLeft) {
             try {
@@ -164,18 +170,29 @@ public class PivxWalletService extends Service{
 
 
                 final long now = System.currentTimeMillis();
+
                 if (now - lastMessageTime > TimeUnit.SECONDS.toMillis(6)) {
                     if (blocksLeft < 6) {
                         blockchainState = BlockchainState.SYNC;
+                        AppPreference.setInt(AppPreference.SYNC_STATE, AppPreference.SYNC_SYNC);
                     } else {
                         blockchainState = BlockchainState.SYNCING;
+                        AppPreference.setInt(AppPreference.SYNC_STATE, AppPreference.SYNC_SYNCING);
                     }
+
+                    pivxApplication.getAppConf().setLastBestChainBlockTime(block.getTime().getTime());
+                    broadcastBlockchainState(true);
+                } else {
+                    if(blocksLeft < 6){
+                        blockchainState = BlockchainState.SYNC;
+                        AppPreference.setInt(AppPreference.SYNC_STATE, AppPreference.SYNC_SYNC);
+
                     pivxApplication.getAppConf().setLastBestChainBlockTime(block.getTime().getTime());
                     broadcastBlockchainState(true);
                 }
+                }
             }catch (Exception e){
                 e.printStackTrace();
-                CrashReporter.saveBackgroundTrace(e,pivxApplication.getPackageInfo());
             }
         }
     };
@@ -199,6 +216,7 @@ public class PivxWalletService extends Service{
     private final BroadcastReceiver connectivityReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
+            log.info("connectivityReceiver");
             try {
                 final String action = intent.getAction();
                 if (ConnectivityManager.CONNECTIVITY_ACTION.equals(action)) {
@@ -314,8 +332,43 @@ public class PivxWalletService extends Service{
     public void onCreate() {
         serviceCreatedAt = System.currentTimeMillis();
         super.onCreate();
+
+//        showForegroundNotification();
+
+        initService();
+    }
+
+    private static final String ANDROID_CHANNEL_ID = "colx.org.colxwallet.service.PivxWalletService.Channel";
+    private static final int NOTIFICATION_ID = 1;
+    private void showForegroundNotification (){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(ANDROID_CHANNEL_ID, "Channel human readable title", NotificationManager.IMPORTANCE_DEFAULT);
+            ((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE)).createNotificationChannel(channel);
+            Bitmap largeIconBitmap = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher);
+
+//            NotificationCompat.Builder builder = new NotificationCompat.Builder(this, ANDROID_CHANNEL_ID);
+//            NotificationCompat.BigTextStyle bigTextStyle = new NotificationCompat.BigTextStyle();
+//            bigTextStyle.setBigContentTitle("COLX wallet is syncing.");
+////            bigTextStyle.bigText("Tap for more information or to stop the app.");
+//            bigTextStyle.bigText("");
+//            builder.setStyle(bigTextStyle);
+//            builder.setSmallIcon(R.mipmap.ic_launcher);
+//            builder.setLargeIcon(largeIconBitmap);
+//            builder.setPriority(Notification.PRIORITY_MAX);
+
+            Notification.Builder builder = new Notification.Builder(this, ANDROID_CHANNEL_ID)
+                    .setContentTitle(getString(R.string.app_name))
+                    .setContentText("COLX wallet is syncing.")
+                    .setLargeIcon(largeIconBitmap)
+                    .setAutoCancel(true);
+
+            Notification notification = builder.build();
+            startForeground(NOTIFICATION_ID, notification);
+        }
+    }
+    private void initService(){
+        log.info("Pivx service init");
         try {
-            log.info("Pivx service started");
             // Android stuff
             final String lockName = getPackageName() + " blockchain sync";
             final PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
@@ -355,21 +408,14 @@ public class PivxWalletService extends Service{
             intentFilter.addAction(Intent.ACTION_DEVICE_STORAGE_LOW);
             intentFilter.addAction(Intent.ACTION_DEVICE_STORAGE_OK);
             registerReceiver(connectivityReceiver, intentFilter); // implicitly init PeerGroup
-
-            // initilizing trusted node.
-            //pivtrumPeergroup.start();
-
-
         } catch (Error e){
             e.printStackTrace();
-            CrashReporter.appendSavedBackgroundTraces(e);
             Intent intent = new Intent(IntentsConstants.ACTION_STORED_BLOCKCHAIN_ERROR);
             broadcastManager.sendBroadcast(intent);
             throw e;
         } catch (Exception e){
             // todo: I have to handle the connection refused..
             e.printStackTrace();
-            CrashReporter.appendSavedBackgroundTraces(e);
             // for now i just launch a notification
             Intent intent = new Intent(IntentsConstants.ACTION_TRUSTED_PEER_CONNECTION_FAIL);
             broadcastManager.sendBroadcast(intent);
@@ -379,15 +425,16 @@ public class PivxWalletService extends Service{
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         log.info("Pivx service onStartCommand");
+
+        showForegroundNotification();
+
         try {
             if (intent != null) {
                 try {
-                    log.info("service init command: " + intent
-                            + (intent.hasExtra(Intent.EXTRA_ALARM_COUNT) ? " (alarm count: " + intent.getIntExtra(Intent.EXTRA_ALARM_COUNT, 0) + ")" : ""));
+                    log.info("service init command: " + intent + (intent.hasExtra(Intent.EXTRA_ALARM_COUNT) ? " (alarm count: " + intent.getIntExtra(Intent.EXTRA_ALARM_COUNT, 0) + ")" : ""));
                 } catch (Exception e) {
                     e.printStackTrace();
-                    log.info("service init command: " + intent
-                            + (intent.hasExtra(Intent.EXTRA_ALARM_COUNT) ? " (alarm count: " + intent.getLongArrayExtra(Intent.EXTRA_ALARM_COUNT) + ")" : ""));
+                    log.info("service init command: " + intent + (intent.hasExtra(Intent.EXTRA_ALARM_COUNT) ? " (alarm count: " + intent.getLongArrayExtra(Intent.EXTRA_ALARM_COUNT) + ")" : ""));
                 }
                 final String action = intent.getAction();
                 if (ACTION_SCHEDULE_SERVICE.equals(action)) {
@@ -398,7 +445,13 @@ public class PivxWalletService extends Service{
                 } else if (ACTION_RESET_BLOCKCHAIN.equals(action)) {
                     log.info("will remove blockchain on service shutdown");
                     resetBlockchainOnShutdown = true;
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        stopForeground(true);
+                    } else {
                     stopSelf();
+                    }
+
                 } else if (ACTION_BROADCAST_TRANSACTION.equals(action)) {
                     blockchainManager.broadcastTransaction(intent.getByteArrayExtra(DATA_TRANSACTION_HASH));
                 }
@@ -414,7 +467,14 @@ public class PivxWalletService extends Service{
     @Override
     public void onDestroy() {
         super.onDestroy();
-        log.info(".onDestroy()");
+        log.info("onDestroy()");
+
+        stopService();
+    }
+
+    public void stopService(){
+        log.info("Pivx service stopService");
+
         try {
             // todo: notify module about this shutdown...
             unregisterReceiver(connectivityReceiver);
@@ -460,6 +520,8 @@ public class PivxWalletService extends Service{
             log.info("scheduling service");
             AlarmManager alarm = (AlarmManager)getSystemService(ALARM_SERVICE);
             long scheduleTime = System.currentTimeMillis() + 2000*60;//(1000 * 60 * 60); // One hour from now
+            Date now = new Date();
+            scheduleTime = now.getTime() + 2 * 1000 * 60;//(1000 * 60 * 60); // One hour from now
 
             Intent intent = new Intent(this, PivxWalletService.class);
             intent.setAction(ACTION_SCHEDULE_SERVICE);
@@ -588,12 +650,20 @@ public class PivxWalletService extends Service{
 
     private void broadcastBlockchainStateIntent(){
         final long now = System.currentTimeMillis();
-        if (now-lastMessageTime> TimeUnit.SECONDS.toMillis(6)) {
+        if (now-lastMessageTime> TimeUnit.SECONDS.toMillis(6) || blockchainState == BlockchainState.SYNC ) {
             lastMessageTime = System.currentTimeMillis();
             Intent intent = new Intent(ACTION_NOTIFICATION);
             intent.putExtra(INTENT_BROADCAST_DATA_TYPE, INTENT_BROADCAST_DATA_BLOCKCHAIN_STATE);
             intent.putExtra(INTENT_EXTRA_BLOCKCHAIN_STATE,blockchainState);
             broadcastManager.sendBroadcast(intent);
+        }
+
+        if(blockchainState == BlockchainState.SYNC){
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                stopForeground(true);
+            } else {
+                stopSelf();
+            }
         }
     }
 
@@ -603,4 +673,27 @@ public class PivxWalletService extends Service{
         broadcastManager.sendBroadcast(intent);
     }
 
+    @SuppressLint("NewApi")
+    @Override
+    public void onTaskRemoved(Intent rootIntent) {
+        log.info("aaaaaaaa onTaskRemoved");
+
+        if( blockchainState != BlockchainState.SYNC ) {
+//            Date now = new Date();
+//            Alarms.enableAlert(getApplicationContext(), now.getTime() + 1000, HardcodedConstants.ALARM_REQ_CODE);
+
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+//                Intent intentService = new Intent(getApplicationContext(), PivxWalletBackgroundService.class);
+//                startService(intentService );
+
+                Intent restartServiceIntent = new Intent(getApplicationContext(), this.getClass());
+                restartServiceIntent.setPackage(getPackageName());
+                PendingIntent restartServicePendingIntent = PendingIntent.getService(getApplicationContext(), 1, restartServiceIntent, PendingIntent.FLAG_ONE_SHOT);
+                AlarmManager alarmService = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
+                alarmService.set(AlarmManager.ELAPSED_REALTIME, SystemClock.elapsedRealtime() + 1000, restartServicePendingIntent);
+            }
+        }
+
+        super.onTaskRemoved(rootIntent);
+    }
 }

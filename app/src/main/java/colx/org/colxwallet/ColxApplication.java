@@ -1,12 +1,15 @@
 package colx.org.colxwallet;
 
+import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.support.v4.content.FileProvider;
 
 import com.github.anrwatchdog.ANRWatchDog;
@@ -65,7 +68,7 @@ import static colx.org.colxwallet.utils.AndroidUtils.shareText;
 @ReportsCrashes(
         mailTo = PivxContext.REPORT_EMAIL, // my email here
         mode = ReportingInteractionMode.TOAST,
-        resToastText = R.string.crash_toast_text)
+        resToastText = R.string.crash_toast_text, formKey = "")
 public class ColxApplication extends Application implements ContextWrapper {
 
     private static Logger log;
@@ -142,6 +145,9 @@ public class ColxApplication extends Application implements ContextWrapper {
 
             // The following line triggers the initialization of ACRA
             ACRA.init(this);
+
+            SharedPreferences pref = getApplicationContext().getSharedPreferences("colx.org.colxwallet", Activity.MODE_PRIVATE);
+            AppPreference.initialize(pref);
             //if (BuildConfig.DEBUG)
             //    new ANRWatchDog().start();
             CrashReporter.init(getCacheDir());
@@ -163,9 +169,25 @@ public class ColxApplication extends Application implements ContextWrapper {
         }
     }
 
+    public static boolean isServiceRunningInForeground(Context context, Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                if (service.foreground) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
     public void startPivxService() {
-        Intent intent = new Intent(this,PivxWalletService.class);
-        startService(intent);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if(!isServiceRunningInForeground(getApplicationContext(), PivxWalletService.class)) {
+                startForegroundService(new Intent(getApplicationContext(), PivxWalletService.class));
+            }
+        } else {
+            startService(new Intent(getApplicationContext(), PivxWalletService.class));
+        }
     }
 
     private void initLogging() {

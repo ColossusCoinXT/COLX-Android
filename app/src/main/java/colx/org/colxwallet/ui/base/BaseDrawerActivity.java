@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
-import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -24,7 +23,6 @@ import chain.BlockchainState;
 import colx.org.colxwallet.BuildConfig;
 import colx.org.colxwallet.R;
 import colx.org.colxwallet.ui.contacts_activity.ContactsActivity;
-import colx.org.colxwallet.ui.donate.DonateActivity;
 import colx.org.colxwallet.ui.settings_activity.SettingsActivity;
 import colx.org.colxwallet.ui.wallet_activity.WalletActivity;
 

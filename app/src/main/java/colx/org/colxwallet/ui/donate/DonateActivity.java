@@ -1,6 +1,7 @@
 package colx.org.colxwallet.ui.donate;
 
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
@@ -78,7 +79,13 @@ public class DonateActivity extends BaseDrawerActivity {
             Intent intent = new Intent(DonateActivity.this, PivxWalletService.class);
             intent.setAction(ACTION_BROADCAST_TRANSACTION);
             intent.putExtra(DATA_TRANSACTION_HASH,transaction.getHash().getBytes());
-            startService(intent);
+
+            pivxApplication.startPivxService();
+//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+//                startForegroundService(intent);
+//            } else {
+//                startService(intent);
+//            }
 
             Toast.makeText(this,R.string.donation_thanks,Toast.LENGTH_LONG).show();
             onBackPressed();
