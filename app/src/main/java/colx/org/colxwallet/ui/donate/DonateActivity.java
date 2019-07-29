@@ -80,12 +80,7 @@ public class DonateActivity extends BaseDrawerActivity {
             intent.setAction(ACTION_BROADCAST_TRANSACTION);
             intent.putExtra(DATA_TRANSACTION_HASH,transaction.getHash().getBytes());
 
-            pivxApplication.startPivxService();
-//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-//                startForegroundService(intent);
-//            } else {
-//                startService(intent);
-//            }
+            pivxApplication.startPivxService(intent);
 
             Toast.makeText(this,R.string.donation_thanks,Toast.LENGTH_LONG).show();
             onBackPressed();

@@ -867,12 +867,7 @@ public class SendActivity extends BaseActivity implements View.OnClickListener {
         intent.setAction(ACTION_BROADCAST_TRANSACTION);
         intent.putExtra(DATA_TRANSACTION_HASH,transaction.getHash().getBytes());
 
-        pivxApplication.startPivxService();
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-//            startForegroundService(intent);
-//        } else {
-//            startService(intent);
-//        }
+        pivxApplication.startPivxService(intent);
 
         Toast.makeText(SendActivity.this,R.string.sending_tx,Toast.LENGTH_LONG).show();
         finish();

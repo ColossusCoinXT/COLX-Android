@@ -180,13 +180,16 @@ public class ColxApplication extends Application implements ContextWrapper {
         }
         return false;
     }
-    public void startPivxService() {
+    public void startPivxService(Intent intent) {
+        if(intent == null){
+            intent = new Intent(getApplicationContext(), PivxWalletService.class);
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             if(!isServiceRunningInForeground(getApplicationContext(), PivxWalletService.class)) {
-                startForegroundService(new Intent(getApplicationContext(), PivxWalletService.class));
+                startForegroundService(intent);
             }
         } else {
-            startService(new Intent(getApplicationContext(), PivxWalletService.class));
+            startService(intent);
         }
     }
 

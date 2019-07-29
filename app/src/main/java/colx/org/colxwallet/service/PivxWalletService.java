@@ -157,10 +157,10 @@ public class PivxWalletService extends Service{
         @Override
         public void onBlocksDownloaded(final Peer peer, final Block block, final FilteredBlock filteredBlock, final int blocksLeft) {
             try {
-                //log.info("Block received , left: " + blocksLeft);
+                log.info("Block received , left: " + blocksLeft);
 
-            /*log.info("############# on Blockcs downloaded ###########");
-            log.info("Peer: " + peer + ", Block: " + block + ", left: " + blocksLeft);*/
+//            log.info("############# on Blockcs downloaded ###########");
+//            log.info("Peer: " + peer + ", Block: " + block + ", left: " + blocksLeft);
 
 
             /*if (PivxContext.IS_TEST)
@@ -333,8 +333,6 @@ public class PivxWalletService extends Service{
         serviceCreatedAt = System.currentTimeMillis();
         super.onCreate();
 
-//        showForegroundNotification();
-
         initService();
     }
 
@@ -449,7 +447,7 @@ public class PivxWalletService extends Service{
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         stopForeground(true);
                     } else {
-                    stopSelf();
+                        stopSelf();
                     }
 
                 } else if (ACTION_BROADCAST_TRANSACTION.equals(action)) {
@@ -676,7 +674,7 @@ public class PivxWalletService extends Service{
     @SuppressLint("NewApi")
     @Override
     public void onTaskRemoved(Intent rootIntent) {
-        log.info("aaaaaaaa onTaskRemoved");
+        log.info("onTaskRemoved");
 
         if( blockchainState != BlockchainState.SYNC ) {
 //            Date now = new Date();

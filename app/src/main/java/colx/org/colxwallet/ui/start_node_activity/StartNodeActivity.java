@@ -94,7 +94,7 @@ public class StartNodeActivity extends BaseActivity {
                 new Handler().postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        pivxApplication.startPivxService();
+                        pivxApplication.startPivxService(null);
                     }
                 }, TimeUnit.SECONDS.toMillis(5));
                 goNext();
@@ -118,7 +118,7 @@ public class StartNodeActivity extends BaseActivity {
                     new Handler().postDelayed(new Runnable() {
                         @Override
                         public void run() {
-                            pivxApplication.startPivxService();
+                            pivxApplication.startPivxService(null);
                         }
                     }, TimeUnit.SECONDS.toMillis(5));
                 }

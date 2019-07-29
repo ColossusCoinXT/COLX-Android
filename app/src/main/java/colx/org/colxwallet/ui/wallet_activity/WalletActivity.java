@@ -204,7 +204,7 @@ public class WalletActivity extends BaseDrawerActivity {
 
     private void init() {
         // Start service if it's not started.
-        pivxApplication.startPivxService();
+        pivxApplication.startPivxService(null);
 
         if (!pivxApplication.getAppConf().hasBackup()){
             long now = System.currentTimeMillis();
