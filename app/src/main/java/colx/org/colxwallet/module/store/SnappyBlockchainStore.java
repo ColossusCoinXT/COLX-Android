@@ -21,12 +21,15 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import colx.org.colxwallet.LogHelper;
+import global.ILogHelper;
+
 /**
  * Created by furszy on 10/17/17.
  */
 
 public class SnappyBlockchainStore implements BlockStore{
-
+    private static final ILogHelper log = LogHelper.getLogHelper(SnappyBlockchainStore.class);
     private static final String CHAIN_HEAD_KEY_STRING = "chainhead";
 
     private final Context context;
@@ -43,22 +46,20 @@ public class SnappyBlockchainStore implements BlockStore{
         this.path = directory;
         this.filename = filename;
         try {
+            log.trace("SnappyBlockchainStore: " + filename);
             tryOpen(directory, filename);
         } catch (IOException e) {
+            log.error(e.getMessage(), e);
             throw new BlockStoreException(e);
-            /*try {
-                dbFactory.repair(directory, options);
-                tryOpen(directory, dbFactory, options);
-            } catch (IOException e1) {
-                throw new BlockStoreException(e1);
-            }*/
         }
     }
 
     private synchronized void tryOpen(File directory,String filename) throws IOException, BlockStoreException {
         try {
+            log.trace("SnappyBlockchainStore:tryOpen" + filename);
             db = DBFactory.open(directory.getAbsolutePath(),filename);
         } catch (SnappydbException e) {
+            log.error(e.getMessage(), e);
             throw new IOException(e);
         }
         initStoreIfNeeded();
@@ -66,10 +67,14 @@ public class SnappyBlockchainStore implements BlockStore{
 
     private synchronized void initStoreIfNeeded() throws BlockStoreException {
         try {
-            if (db.getBytes(CHAIN_HEAD_KEY_STRING) != null)
+            log.trace("SnappyBlockchainStore:initStoreIfNeeded");
+            if (db.getBytes(CHAIN_HEAD_KEY_STRING) != null) {
+                log.info("SnappyBlockchainStore has already been initialized");
                 return;   // Already initialised.
+            }
         } catch (SnappydbException e) {
             // not initialized
+            log.error(e.getMessage(), e);
             Block genesis = context.getParams().getGenesisBlock().cloneAsHeader();
             StoredBlock storedGenesis = new StoredBlock(genesis, genesis.getWork(), 0);
             put(storedGenesis);
@@ -96,7 +101,7 @@ public class SnappyBlockchainStore implements BlockStore{
 
             assert Arrays.equals(dbBlock.getHeader().getHash().getBytes(), blockHash.getBytes()) : "put is different than get in db.. " + block.getHeader().getHashAsString() + ", db: " + dbBlock.getHeader().getHashAsString();
         } catch (SnappydbException e) {
-            e.printStackTrace();
+            log.error(e.getMessage(), e);
             throw new BlockStoreException(e);
         }
     }
@@ -106,15 +111,17 @@ public class SnappyBlockchainStore implements BlockStore{
         try {
             String blockToGet = hash.toString();
             if (!db.exists(blockToGet)) {
-                //System.out.println("Block to get doesn't exists: "+blockToGet);
+                //log.debug("Block to get doesn't exists: " + blockToGet);
                 return null;
             }
             byte[] bits = db.getBytes(blockToGet);
-            if (bits == null)
+            if (bits == null) {
+                //log.debug("Block to get bytes not found: " + blockToGet);
                 return null;
+            }
             return StoredBlock.deserializeCompact(context.getParams(), ByteBuffer.wrap(bits));
         } catch (SnappydbException e) {
-            e.printStackTrace();
+            log.error(String.format("SnappyBlockchainStore::get, %s, hash=%s", e.getMessage(), hash.toString()), e);
             return null;
         }
     }
@@ -122,10 +129,9 @@ public class SnappyBlockchainStore implements BlockStore{
     @Override
     public synchronized StoredBlock getChainHead() throws BlockStoreException {
         try {
-            System.out.println("Calling get Method from chain head");
             return get(Sha256Hash.wrap(db.getBytes(CHAIN_HEAD_KEY_STRING)));
         } catch (SnappydbException e) {
-            e.printStackTrace();
+            log.error(e.getMessage(), e);
             throw new BlockStoreException(e);
         }
     }
@@ -135,7 +141,7 @@ public class SnappyBlockchainStore implements BlockStore{
         try {
             db.put(CHAIN_HEAD_KEY_STRING, chainHead.getHeader().getHash().getBytes());
         } catch (SnappydbException e) {
-            e.printStackTrace();
+            log.error(e.getMessage(), e);
             throw new BlockStoreException(e);
         }
     }
@@ -143,56 +149,16 @@ public class SnappyBlockchainStore implements BlockStore{
     @Override
     public synchronized void close() throws BlockStoreException {
         try {
+            log.trace("SnappyBlockchainStore::close");
             db.destroy();
         } catch (SnappydbException e) {
+            log.error(e.getMessage(), e);
             throw new BlockStoreException(e);
         }
     }
-
-    public File getPath() {
-        return path;
-    }
-
-    public String getFilename() {
-        return filename;
-    }
-
-    /** Erases the contents of the database (but NOT the underlying files themselves) and then reinitialises with the genesis block.
-    public synchronized void reset() throws BlockStoreException {
-        try {
-            WriteBatch batch = db.createWriteBatch();
-            try {
-                DBIterator it = db.iterator();
-                try {
-                    it.seekToFirst();
-                    while (it.hasNext())
-                        batch.delete(it.next().getKey());
-                    db.write(batch);
-                } finally {
-                    it.close();
-                }
-            } finally {
-                batch.close();
-            }
-            initStoreIfNeeded();
-        } catch (IOException e) {
-            throw new BlockStoreException(e);
-        }
-    }
-
-    public synchronized void destroy() throws IOException {
-
-        JniDBFactory.factory.destroy(path, new Options());
-    }*/
-
-
 
     @Override
     public NetworkParameters getParams() {
         return context.getParams();
-    }
-
-    public void truncate() throws SnappydbException {
-        db.destroy();
     }
 }

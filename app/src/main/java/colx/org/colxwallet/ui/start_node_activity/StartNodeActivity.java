@@ -21,6 +21,8 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import colx.org.colxwallet.LogHelper;
+import global.ILogHelper;
 import global.PivtrumGlobalData;
 import pivtrum.PivtrumPeer;
 import pivtrum.PivtrumPeerData;
@@ -37,7 +39,7 @@ import colx.org.colxwallet.utils.DialogsUtil;
  */
 
 public class StartNodeActivity extends BaseActivity {
-    private Logger log = LoggerFactory.getLogger(StartNodeActivity.class);
+    private ILogHelper log = LogHelper.getLogHelper(StartNodeActivity.class);
 
     private Button openDialog;
     private Button btnSelectNode;

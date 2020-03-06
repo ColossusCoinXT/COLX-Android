@@ -10,8 +10,10 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 
+import colx.org.colxwallet.LogHelper;
 import colx.org.colxwallet.R;
 import colx.org.colxwallet.module.PivxContext;
+import global.ILogHelper;
 
 /**
  * Created by furszy on 7/10/17.
@@ -19,7 +21,7 @@ import colx.org.colxwallet.module.PivxContext;
 
 public class IntentsUtils {
 
-    private static final Logger logger = LoggerFactory.getLogger(IntentsUtils.class);
+    private static final ILogHelper logger = LogHelper.getLogHelper(IntentsUtils.class);
 
     public static void startSend(Context context, final CharSequence subject, final CharSequence text, final ArrayList<Uri> attachments) {
         final Intent intent;

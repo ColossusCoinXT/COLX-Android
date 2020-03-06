@@ -26,6 +26,8 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 
+import colx.org.colxwallet.LogHelper;
+import global.ILogHelper;
 import global.utils.Io;
 import colx.org.colxwallet.ColxApplication;
 import colx.org.colxwallet.R;
@@ -39,7 +41,7 @@ import static colx.org.colxwallet.utils.AndroidUtils.shareText;
 
 public class CrashPopupActivity extends AppCompatActivity implements View.OnClickListener {
 
-    private Logger log = LoggerFactory.getLogger(CrashPopupActivity.class);
+    private ILogHelper log = LogHelper.getLogHelper(CrashPopupActivity.class);
 
     private String authorities = "colx.org.colxwallet.myfileprovider";
 

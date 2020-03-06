@@ -18,9 +18,11 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import colx.org.colxwallet.LogHelper;
 import colx.org.colxwallet.R;
 import colx.org.colxwallet.ui.base.tools.adapter.BaseRecyclerAdapter;
 import colx.org.colxwallet.ui.base.tools.adapter.BaseRecyclerViewHolder;
+import global.ILogHelper;
 
 /**
  * Created by furszy on 6/20/17.
@@ -28,7 +30,7 @@ import colx.org.colxwallet.ui.base.tools.adapter.BaseRecyclerViewHolder;
 
 public abstract class BaseRecyclerFragment<T> extends BaseFragment {
 
-    private static final Logger log = LoggerFactory.getLogger(BaseRecyclerFragment.class);
+    private static final ILogHelper log = LogHelper.getLogHelper(BaseRecyclerFragment.class);
 
     private View root;
     private RecyclerView.LayoutManager layoutManager;

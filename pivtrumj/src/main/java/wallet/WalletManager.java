@@ -49,6 +49,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import global.ContextWrapper;
+import global.ILogHelper;
 import global.WalletConfiguration;
 import global.utils.Io;
 import wallet.exceptions.InsufficientInputsException;
@@ -60,7 +61,7 @@ import wallet.exceptions.TxNotFoundException;
 
 public class WalletManager {
 
-    private static final Logger logger = LoggerFactory.getLogger(WalletManager.class);
+    private ILogHelper logger;
     /**
      * Minimum entropy
      */
@@ -74,7 +75,11 @@ public class WalletManager {
     private WalletConfiguration conf;
     private ContextWrapper contextWrapper;
 
-    public WalletManager(ContextWrapper contextWrapper, WalletConfiguration conf) {
+    public WalletManager(
+            ILogHelper ilog,
+            ContextWrapper contextWrapper,
+            WalletConfiguration conf) {
+        this.logger = ilog;
         this.conf = conf;
         this.contextWrapper = contextWrapper;
     }
@@ -292,6 +297,7 @@ public class WalletManager {
         try {
             protobufSerializeWallet(wallet);
         } catch (final IOException x) {
+            logger.error(x.getMessage(), x);
             throw new RuntimeException(x);
         }
     }
@@ -309,7 +315,7 @@ public class WalletManager {
         //if (conf.isTest())
         //    Io.chmod(walletFile, 0777);
 
-        logger.info("wallet saved to: '{}', took {}", walletFile);
+        logger.info("wallet saved");
     }
 
 

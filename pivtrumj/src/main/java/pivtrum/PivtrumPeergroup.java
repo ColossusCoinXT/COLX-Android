@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import global.ILogHelper;
 import pivtrum.exceptions.InvalidPeerVersion;
 import pivtrum.listeners.AddressListener;
 import pivtrum.listeners.PeerDataListener;
@@ -40,7 +41,7 @@ import wallet.WalletManager;
 
 public class PivtrumPeergroup implements PeerListener, PeerDataListener {
 
-    private static final Logger log = LoggerFactory.getLogger(PivtrumPeergroup.class);
+    private ILogHelper log;
 
     /**
      * Default number of connections
@@ -82,7 +83,12 @@ public class PivtrumPeergroup implements PeerListener, PeerDataListener {
     private CopyOnWriteArrayList<AddressListener> addressListeners = new CopyOnWriteArrayList<>();
     private CopyOnWriteArrayList<PeerListener> peerConnectionListeners = new CopyOnWriteArrayList<>();
 
-    public PivtrumPeergroup(NetworkConf networkConf, WalletManager walletManager, AddressStore addressStore) throws IOException {
+    public PivtrumPeergroup(
+            ILogHelper ilog,
+            NetworkConf networkConf,
+            WalletManager walletManager,
+            AddressStore addressStore) throws IOException {
+        this.log = ilog;
         this.peers = new CopyOnWriteArrayList<>();
         this.pendingPeers = new CopyOnWriteArrayList<>();
         this.networkConf = networkConf;
@@ -93,7 +99,10 @@ public class PivtrumPeergroup implements PeerListener, PeerDataListener {
         versionMsg = new VersionMsg(networkConf.getClientName(),networkConf.getMaxProtocolVersion(),networkConf.getMinProtocolVersion());
     }
 
-    public PivtrumPeergroup(NetworkConf networkConf) throws IOException {
+    public PivtrumPeergroup(
+            ILogHelper ilog,
+            NetworkConf networkConf) throws IOException {
+        this.log = ilog;
         this.peers = new CopyOnWriteArrayList<>();
         this.pendingPeers = new CopyOnWriteArrayList<>();
         this.networkConf = networkConf;
@@ -135,7 +144,7 @@ public class PivtrumPeergroup implements PeerListener, PeerDataListener {
             /*
             * Connect to the trusted node and get servers from it.
             */
-            trustedPeer = new PivtrumPeer(networkConf.getTrustedServer(), ioManager,versionMsg);
+            trustedPeer = new PivtrumPeer(log, networkConf.getTrustedServer(), ioManager,versionMsg);
             trustedPeer.addPeerListener(this);
             trustedPeer.addPeerDataListener(this);
             trustedPeer.connect();
@@ -179,7 +188,7 @@ public class PivtrumPeergroup implements PeerListener, PeerDataListener {
                 // connect to non trusted peers
                 for (InetSocketAddress inetSocketAddress : networkConf.getNetworkServers()) {
                     PivtrumPeerData peerData = new PivtrumPeerData(inetSocketAddress.getHostName(),inetSocketAddress.getPort(),0);
-                    PivtrumPeer peer = new PivtrumPeer(peerData,ioManager,versionMsg);
+                    PivtrumPeer peer = new PivtrumPeer(log, peerData, ioManager, versionMsg);
                     peer.addPeerListener(this);
                     peer.addPeerDataListener(this);
                     pendingPeers.add(peer);

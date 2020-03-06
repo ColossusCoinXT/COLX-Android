@@ -27,7 +27,6 @@ import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -36,11 +35,11 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import chain.BlockchainManager;
+import colx.org.colxwallet.LogHelper;
 import global.ContextWrapper;
+import global.ILogHelper;
 import global.WalletConfiguration;
 import pivtrum.PivtrumPeergroup;
 import colx.org.colxwallet.contacts.AddressLabel;
@@ -50,7 +49,6 @@ import colx.org.colxwallet.rate.db.PivxRate;
 import colx.org.colxwallet.rate.db.RateDb;
 import colx.org.colxwallet.ui.transaction_send_activity.custom.inputs.InputWrapper;
 import colx.org.colxwallet.ui.wallet_activity.TransactionWrapper;
-import store.AddressBalance;
 import wallet.exceptions.InsufficientInputsException;
 import wallet.exceptions.TxNotFoundException;
 import wallet.WalletManager;
@@ -61,7 +59,7 @@ import wallet.WalletManager;
 
 public class PivxModuleImp implements PivxModule {
 
-    private static final Logger logger = LoggerFactory.getLogger(PivxModuleImp.class);
+    private static final ILogHelper logger = LogHelper.getLogHelper(PivxModuleImp.class);
 
     private ContextWrapper context;
     private WalletConfiguration walletConfiguration;
@@ -80,8 +78,13 @@ public class PivxModuleImp implements PivxModule {
         this.walletConfiguration = walletConfiguration;
         this.contactsStore = contactsStore;
         this.rateDb = rateDb;
-        walletManager = new WalletManager(contextWrapper,walletConfiguration);
-        blockchainManager = new BlockchainManager(context,walletManager,walletConfiguration);
+        walletManager = new WalletManager(LogHelper.getLogHelper(WalletManager.class), contextWrapper, walletConfiguration);
+
+        blockchainManager = new BlockchainManager(
+                LogHelper.getLogHelper(BlockchainManager.class),
+                context,
+                walletManager,
+                walletConfiguration);
     }
 
     public void start() throws IOException{

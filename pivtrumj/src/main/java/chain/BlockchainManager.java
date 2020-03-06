@@ -39,6 +39,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import global.ContextWrapper;
+import global.ILogHelper;
 import global.PivtrumGlobalData;
 import global.WalletConfiguration;
 import pivtrum.PivtrumPeerData;
@@ -46,9 +47,6 @@ import wallet.WalletManager;
 
 
 public class BlockchainManager {
-
-    private static final Logger LOG = LoggerFactory.getLogger(BlockchainManager.class);
-
     public static final int BLOCKCHAIN_STATE_OFF = 10;
     public static final int BLOCKCHAIN_STATE_ON = 11;
 
@@ -56,6 +54,7 @@ public class BlockchainManager {
     public final String USER_AGENT;
 
     // system
+    private ILogHelper LOG;
     private ContextWrapper context;
 
     // wallet files..
@@ -70,7 +69,12 @@ public class BlockchainManager {
     private List<BlockchainManagerListener> blockchainManagerListeners;
 
 
-    public BlockchainManager(ContextWrapper contextWrapper,WalletManager walletManager, WalletConfiguration conf) {
+    public BlockchainManager(
+            ILogHelper ilog,
+            ContextWrapper contextWrapper,
+            WalletManager walletManager,
+            WalletConfiguration conf) {
+        this.LOG = ilog;
         this.walletManager = walletManager;
         this.conf = conf;
         this.context = contextWrapper;
@@ -105,7 +109,7 @@ public class BlockchainManager {
                         final InputStream checkpointsInputStream =  context.openAssestsStream(filename+suffix);
                         CheckpointManager.checkpoint(conf.getNetworkParams(), checkpointsInputStream, blockStore, earliestKeyCreationTime);
                         watch.stop();
-                        LOG.info("checkpoints loaded from '{}', took {}", conf.getCheckpointFilename(), watch);
+                        LOG.info("checkpoints loaded from '%s', took %s", conf.getCheckpointFilename(), watch.toString());
                     }catch (final IOException x) {
                         LOG.error("problem reading checkpoints, continuing without", x);
                     }catch (Exception e){
@@ -197,12 +201,13 @@ public class BlockchainManager {
             if (peerGroup.isRunning())
                 peerGroup.stopAsync();
             peerGroup = null;
-            LOG.info("peergroup stopped");
+            LOG.info("peergroup stopped, reset blockchain: " + resetBlockchainOnShutdown);
         }
 
         try {
             blockStore.close();
         } catch (final BlockStoreException x) {
+            LOG.error(x.getMessage(), x);
             throw new RuntimeException(x);
         }
 

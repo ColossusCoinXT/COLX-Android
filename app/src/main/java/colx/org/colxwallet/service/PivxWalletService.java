@@ -58,6 +58,7 @@ import chain.Impediment;
 import colx.org.colxwallet.AppPreference;
 import colx.org.colxwallet.ColxApplication;
 import colx.org.colxwallet.HardcodedConstants;
+import colx.org.colxwallet.LogHelper;
 import colx.org.colxwallet.R;
 import colx.org.colxwallet.module.PivxContext;
 import colx.org.colxwallet.module.PivxModuleImp;
@@ -68,6 +69,7 @@ import colx.org.colxwallet.rate.db.PivxRate;
 import colx.org.colxwallet.ui.initial.InitialActivity;
 import colx.org.colxwallet.ui.wallet_activity.WalletActivity;
 import colx.org.colxwallet.utils.AppConf;
+import global.ILogHelper;
 import pivtrum.listeners.AddressListener;
 
 import static colx.org.colxwallet.module.PivxContext.CONTEXT;
@@ -92,7 +94,7 @@ import static colx.org.colxwallet.service.IntentsConstants.NOT_COINS_RECEIVED;
 
 public class PivxWalletService extends Service{
 
-    private Logger log = LoggerFactory.getLogger(PivxWalletService.class);
+    private ILogHelper log = LogHelper.getLogHelper(PivxWalletService.class);
 
     private ColxApplication pivxApplication;
     private PivxModuleImp module;
@@ -157,20 +159,7 @@ public class PivxWalletService extends Service{
         @Override
         public void onBlocksDownloaded(final Peer peer, final Block block, final FilteredBlock filteredBlock, final int blocksLeft) {
             try {
-                log.info("Block received , left: " + blocksLeft);
-
-//            log.info("############# on Blockcs downloaded ###########");
-//            log.info("Peer: " + peer + ", Block: " + block + ", left: " + blocksLeft);
-
-
-            /*if (PivxContext.IS_TEST)
-                showBlockchainSyncNotification(blocksLeft);*/
-
-                //delayHandler.removeCallbacksAndMessages(null);
-
-
                 final long now = System.currentTimeMillis();
-
                 if (now - lastMessageTime > TimeUnit.SECONDS.toMillis(6)) {
                     if (blocksLeft < 6) {
                         blockchainState = BlockchainState.SYNC;
@@ -222,7 +211,7 @@ public class PivxWalletService extends Service{
                 if (ConnectivityManager.CONNECTIVITY_ACTION.equals(action)) {
                     final NetworkInfo networkInfo = (NetworkInfo) intent.getParcelableExtra(ConnectivityManager.EXTRA_NETWORK_INFO);
                     final boolean hasConnectivity = networkInfo.isConnected();
-                    log.info("network is {}, state {}/{}", hasConnectivity ? "up" : "down", networkInfo.getState(), networkInfo.getDetailedState());
+                    log.info("network is %s, state %s/%s", hasConnectivity ? "up" : "down", networkInfo.getState(), networkInfo.getDetailedState());
                     if (hasConnectivity)
                         impediments.remove(Impediment.NETWORK);
                     else

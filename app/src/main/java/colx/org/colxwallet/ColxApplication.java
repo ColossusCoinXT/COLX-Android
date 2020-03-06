@@ -12,13 +12,9 @@ import android.net.Uri;
 import android.os.Build;
 import android.support.v4.content.FileProvider;
 
-import com.github.anrwatchdog.ANRWatchDog;
-import com.snappydb.SnappydbException;
-
 import org.acra.ACRA;
 import org.acra.ReportingInteractionMode;
 import org.acra.annotation.ReportsCrashes;
-import org.colxj.store.BlockStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,9 +26,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.LoggerContext;
@@ -42,6 +35,7 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.rolling.RollingFileAppender;
 import ch.qos.logback.core.rolling.TimeBasedRollingPolicy;
 import global.ContextWrapper;
+import global.ILogHelper;
 import global.WalletConfiguration;
 import global.utils.Io;
 import pivtrum.NetworkConf;
@@ -51,13 +45,11 @@ import colx.org.colxwallet.module.PivxContext;
 import colx.org.colxwallet.module.PivxModule;
 import colx.org.colxwallet.module.PivxModuleImp;
 import colx.org.colxwallet.module.WalletConfImp;
-import colx.org.colxwallet.module.store.SnappyBlockchainStore;
 import colx.org.colxwallet.rate.db.RateDb;
 import colx.org.colxwallet.service.PivxWalletService;
 import colx.org.colxwallet.utils.AppConf;
 import colx.org.colxwallet.utils.CentralFormats;
 import colx.org.colxwallet.utils.CrashReporter;
-import store.AddressStore;
 
 import static colx.org.colxwallet.service.IntentsConstants.ACTION_RESET_BLOCKCHAIN;
 import static colx.org.colxwallet.utils.AndroidUtils.shareText;
@@ -71,7 +63,11 @@ import static colx.org.colxwallet.utils.AndroidUtils.shareText;
         resToastText = R.string.crash_toast_text, formKey = "")
 public class ColxApplication extends Application implements ContextWrapper {
 
-    private static Logger log;
+    static {
+        LogHelper.setLogType(LogHelper.LogHelperType.http);
+    }
+
+    private static final ILogHelper log = LogHelper.getLogHelper(ColxApplication.class);
 
     /** Singleton */
     private static ColxApplication instance;
@@ -136,7 +132,8 @@ public class ColxApplication extends Application implements ContextWrapper {
         instance = this;
         try {
             initLogging();
-            log = LoggerFactory.getLogger(ColxApplication.class);
+            log.info("ColxApplication::onCreate");
+
             PackageManager manager = getPackageManager();
             info = manager.getPackageInfo(this.getPackageName(), 0);
             activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
@@ -165,7 +162,7 @@ public class ColxApplication extends Application implements ContextWrapper {
             pivxModule.start();
 
         } catch (Exception e){
-            e.printStackTrace();
+            log.error(e.getMessage(), e);
         }
     }
 

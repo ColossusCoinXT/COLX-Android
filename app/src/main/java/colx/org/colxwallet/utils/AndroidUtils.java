@@ -14,8 +14,10 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 
 import colx.org.colxwallet.ColxApplication;
+import colx.org.colxwallet.LogHelper;
 import colx.org.colxwallet.R;
 import colx.org.colxwallet.module.PivxContext;
+import global.ILogHelper;
 
 import static android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP;
 import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
@@ -27,7 +29,7 @@ import static android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP;
 
 public class AndroidUtils {
 
-    static final Logger logger = LoggerFactory.getLogger(AndroidUtils.class);
+    static final ILogHelper logger = LogHelper.getLogHelper(AndroidUtils.class);
 
 
     public static void shareText(final Context context, final CharSequence subject, final CharSequence text, final ArrayList<Uri> attachments) {

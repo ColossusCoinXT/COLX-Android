@@ -37,6 +37,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
+import global.ILogHelper;
 import pivtrum.exceptions.InvalidPeerVersion;
 import pivtrum.listeners.PeerDataListener;
 import pivtrum.listeners.PeerListener;
@@ -63,7 +64,7 @@ import pivtrum.utility.TxHashHeightWrapper;
 
 public class PivtrumPeer implements IoHandler{
 
-    private final Logger log;
+    private final ILogHelper log;
 
     /** Peer data */
     private PivtrumPeerData peerData;
@@ -86,11 +87,15 @@ public class PivtrumPeer implements IoHandler{
     private CopyOnWriteArrayList<PeerListener> peerListeners = new CopyOnWriteArrayList<>();
     private CopyOnWriteArrayList<PeerDataListener> peerDataListeners = new CopyOnWriteArrayList<>();
 
-    public PivtrumPeer(PivtrumPeerData peerData,IoManager ioManager,VersionMsg versionMsg) {
+    public PivtrumPeer(
+            ILogHelper ilog,
+            PivtrumPeerData peerData,
+            IoManager ioManager,
+            VersionMsg versionMsg) {
         this.peerData = peerData;
         this.ioManager = ioManager;
         this.versionMsg = versionMsg;
-        this.log = LoggerFactory.getLogger(PivtrumPeer.class.getName()+"-"+peerData.getHost());
+        this.log = ilog;
     }
 
     public void addPeerListener(PeerListener peerListener){

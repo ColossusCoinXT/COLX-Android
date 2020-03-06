@@ -49,6 +49,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import colx.org.colxwallet.LogHelper;
 import colx.org.colxwallet.R;
 import colx.org.colxwallet.contacts.AddressLabel;
 import colx.org.colxwallet.module.NoPeerConnectedException;
@@ -70,6 +71,7 @@ import colx.org.colxwallet.utils.DialogsUtil;
 import colx.org.colxwallet.utils.NavigationUtils;
 import colx.org.colxwallet.utils.QrUtils;
 import colx.org.colxwallet.utils.scanner.ScanActivity;
+import global.ILogHelper;
 import wallet.exceptions.InsufficientInputsException;
 import wallet.exceptions.TxNotFoundException;
 
@@ -100,7 +102,7 @@ import static colx.org.colxwallet.utils.scanner.ScanActivity.INTENT_EXTRA_RESULT
 
 public class SendActivity extends BaseActivity implements View.OnClickListener {
 
-    private Logger logger = LoggerFactory.getLogger(SendActivity.class);
+    private ILogHelper logger = LogHelper.getLogHelper(SendActivity.class);
 
     public static final String INTENT_EXTRA_TOTAL_AMOUNT = "total_amount";
     public static final String INTENT_ADDRESS = "intent_address";

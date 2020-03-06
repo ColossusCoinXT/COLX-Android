@@ -6,9 +6,11 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 
+import colx.org.colxwallet.LogHelper;
 import colx.org.colxwallet.contacts.AddressLabel;
 import colx.org.colxwallet.module.PivxModule;
 import colx.org.colxwallet.ui.wallet_activity.TransactionWrapper;
+import global.ILogHelper;
 
 /**
  * Created by furszy on 8/14/17.
@@ -16,7 +18,7 @@ import colx.org.colxwallet.ui.wallet_activity.TransactionWrapper;
 
 public class TxUtils {
 
-    private static Logger logger = LoggerFactory.getLogger(TxUtils.class);
+    private static ILogHelper logger = LogHelper.getLogHelper(TxUtils.class);
 
     public static String getAddressOrContact(PivxModule pivxModule, TransactionWrapper data) {
         String text;

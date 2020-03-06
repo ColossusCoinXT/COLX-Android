@@ -22,6 +22,8 @@ import java.net.Socket;
 import java.net.SocketAddress;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import colx.org.colxwallet.LogHelper;
+import global.ILogHelper;
 import global.PivtrumGlobalData;
 import pivtrum.PivtrumPeerData;
 import colx.org.colxwallet.R;
@@ -36,7 +38,7 @@ import colx.org.colxwallet.ui.base.dialogs.SimpleTwoButtonsDialog;
 
 public class DialogsUtil {
 
-    private static Logger logger = LoggerFactory.getLogger(DialogsUtil.class);
+    private static ILogHelper logger = LogHelper.getLogHelper(DialogsUtil.class);
 
 
     public static SimpleTextDialog buildSimpleErrorTextDialog(Context context, int resTitle, int resBody){

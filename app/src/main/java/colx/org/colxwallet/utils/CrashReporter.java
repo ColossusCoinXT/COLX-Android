@@ -39,7 +39,9 @@ import java.util.Set;
 import java.util.TimeZone;
 
 import colx.org.colxwallet.ColxApplication;
+import colx.org.colxwallet.LogHelper;
 import colx.org.colxwallet.module.PivxContext;
+import global.ILogHelper;
 
 
 public class CrashReporter {
@@ -54,7 +56,7 @@ public class CrashReporter {
 
 	private static final TimeZone UTC = TimeZone.getTimeZone("UTC");
 
-	private static final Logger log = LoggerFactory.getLogger(CrashReporter.class);
+	private static final ILogHelper log = LogHelper.getLogHelper(CrashReporter.class);
 
 	public interface CrashListener{
 

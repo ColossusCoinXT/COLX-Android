@@ -18,6 +18,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import colx.org.colxwallet.LogHelper;
 import colx.org.colxwallet.R;
 import colx.org.colxwallet.rate.db.PivxRate;
 import colx.org.colxwallet.ui.base.BaseRecyclerFragment;
@@ -25,6 +26,7 @@ import colx.org.colxwallet.ui.base.tools.adapter.BaseRecyclerAdapter;
 import colx.org.colxwallet.ui.base.tools.adapter.BaseRecyclerViewHolder;
 import colx.org.colxwallet.ui.base.tools.adapter.ListItemListeners;
 import colx.org.colxwallet.ui.transaction_detail_activity.TransactionDetailActivity;
+import global.ILogHelper;
 
 import static colx.org.colxwallet.ui.transaction_detail_activity.FragmentTxDetail.IS_DETAIL;
 import static colx.org.colxwallet.ui.transaction_detail_activity.FragmentTxDetail.TX_WRAPPER;
@@ -36,7 +38,7 @@ import static colx.org.colxwallet.utils.TxUtils.getAddressOrContact;
 
 public class TransactionsFragmentBase extends BaseRecyclerFragment<TransactionWrapper> {
 
-    private static final Logger logger = LoggerFactory.getLogger(TransactionsFragmentBase.class);
+    private static final ILogHelper logger = LogHelper.getLogHelper(TransactionsFragmentBase.class);
 
     private PivxRate pivxRate;
     private MonetaryFormat coinFormat = MonetaryFormat.BTC;

@@ -45,6 +45,8 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 
+import colx.org.colxwallet.LogHelper;
+import global.ILogHelper;
 import global.utils.Io;
 import colx.org.colxwallet.R;
 
@@ -68,7 +70,7 @@ public abstract class ReportIssueDialogBuilder extends DialogBuilder implements 
     private CheckBox viewCollectDb;
 
 
-    private static final Logger log = LoggerFactory.getLogger(ReportIssueDialogBuilder.class);
+    private static final ILogHelper log = LogHelper.getLogHelper("ReportIssueDialogBuilder");
 
     public ReportIssueDialogBuilder(final Context context, String authorities, final int titleResId, final int messageResId) {
         super(context);

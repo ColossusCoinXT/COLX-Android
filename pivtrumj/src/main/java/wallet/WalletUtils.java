@@ -20,7 +20,6 @@ import org.colxj.wallet.KeyChainGroup;
 import org.colxj.wallet.UnreadableWalletException;
 import org.colxj.wallet.Wallet;
 import org.colxj.wallet.WalletProtobufSerializer;
-import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -36,19 +35,16 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.LinkedList;
+import java.util.Comparator;
 import java.util.concurrent.TimeUnit;
 
 import global.utils.Iso8601Format;
 
 public class WalletUtils
 {
-
-	private static final org.slf4j.Logger LOG = LoggerFactory.getLogger("WalletUtils");
-
 	public static long longHash(final Sha256Hash hash) {
 		final byte[] bytes = hash.getBytes();
 
@@ -61,17 +57,10 @@ public class WalletUtils
 	{
 		for (final TransactionOutput output : tx.getOutputs())
 		{
-			try
+			if (!output.isMine(wallet))
 			{
-				if (!output.isMine(wallet))
-				{
-					final Script script = output.getScriptPubKey();
-					return script.getToAddress(params, true);
-				}
-			}
-			catch (final ScriptException x)
-			{
-				// swallow
+				final Script script = output.getScriptPubKey();
+				return script.getToAddress(params, true);
 			}
 		}
 
@@ -82,20 +71,10 @@ public class WalletUtils
 	{
 		for (final TransactionOutput output : tx.getOutputs())
 		{
-			try
+			if (output.isMine(wallet))
 			{
-				if (output.isMine(wallet))
-				{
-					final Script script = output.getScriptPubKey();
-					return script.getToAddress(params, true);
-				}
-			}
-			catch (final ScriptException x)
-			{
-				// swallow
-			}
-			catch (Exception e){
-				e.printStackTrace();
+				final Script script = output.getScriptPubKey();
+				return script.getToAddress(params, true);
 			}
 		}
 
@@ -319,12 +298,12 @@ public class WalletUtils
 				continue;
 			}
 			if (usedOutputs!=null && usedOutputs.contains(transactionOutput)){
-				LOG.info("Output already used");
+				//LOG.info("Output already used");
 				continue;
 			}
 
 			if (DefaultCoinSelector.isSelectable(transactionOutput.getParentTransaction()) && transactionOutput.isAvailableForSpending() && transactionOutput.getParentTransaction().isMature()) {
-				LOG.info("adding non locked transaction to spend as an input: postion:" + transactionOutPoint.getIndex() + ", parent hash: " + transactionOutPoint.toString());
+				//LOG.info("adding non locked transaction to spend as an input: postion:" + transactionOutPoint.getIndex() + ", parent hash: " + transactionOutPoint.toString());
 				totalInputsValue = totalInputsValue.add(transactionOutput.getValue());
 				unspentTransactions.add(transactionOutput);
 				if (totalInputsValue.isGreaterThan(totalAmount)) {
