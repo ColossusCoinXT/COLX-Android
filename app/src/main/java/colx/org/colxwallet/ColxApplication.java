@@ -64,7 +64,7 @@ import static colx.org.colxwallet.utils.AndroidUtils.shareText;
 public class ColxApplication extends Application implements ContextWrapper {
 
     static {
-        LogHelper.setLogType(LogHelper.LogHelperType.http);
+        LogHelper.setLogType(LogHelper.LogHelperType.logcat);
     }
 
     private static final ILogHelper log = LogHelper.getLogHelper(ColxApplication.class);
