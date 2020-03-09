@@ -41,7 +41,14 @@ android {
     }
 }
 
-configurations.all { resolutionStrategy { force 'org.objenesis:objenesis:2.1' } }
+configurations.all {
+    resolutionStrategy {
+        force 'org.objenesis:objenesis:2.1'
+    }
+
+    exclude module: 'json'
+    exclude module: 'commons-logging'
+}
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
