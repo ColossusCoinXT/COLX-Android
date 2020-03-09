@@ -56,7 +56,7 @@ public class SnappyBlockchainStore implements BlockStore{
 
     private synchronized void tryOpen(File directory,String filename) throws IOException, BlockStoreException {
         try {
-            log.trace("SnappyBlockchainStore:tryOpen" + filename);
+            log.trace("SnappyBlockchainStore:tryOpen: " + filename);
             db = DBFactory.open(directory.getAbsolutePath(),filename);
         } catch (SnappydbException e) {
             log.error(e.getMessage(), e);
@@ -150,7 +150,7 @@ public class SnappyBlockchainStore implements BlockStore{
     public synchronized void close() throws BlockStoreException {
         try {
             log.trace("SnappyBlockchainStore::close");
-            db.destroy();
+            db.close();
         } catch (SnappydbException e) {
             log.error(e.getMessage(), e);
             throw new BlockStoreException(e);
