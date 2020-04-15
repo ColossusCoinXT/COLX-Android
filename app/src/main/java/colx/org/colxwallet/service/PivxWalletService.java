@@ -230,7 +230,7 @@ public class PivxWalletService extends Service{
                     check();
                 }
             }catch (Exception e){
-                e.printStackTrace();
+                log.error(e.toString(), e);
             }
         }
     };
@@ -286,11 +286,9 @@ public class PivxWalletService extends Service{
                 } else {
                     log.error("transaction with a value lesser than zero arrives ({})", amount.getValue());
                 }
-
             }catch (Exception e){
-                e.printStackTrace();
+                log.error(e.toString(), e);
             }
-
         }
     };
 
@@ -312,7 +310,7 @@ public class PivxWalletService extends Service{
                     }
                 }
             }catch (Exception e){
-                e.printStackTrace();
+                log.error(e.toString(), e);
             }
         }
     };
@@ -396,13 +394,13 @@ public class PivxWalletService extends Service{
             intentFilter.addAction(Intent.ACTION_DEVICE_STORAGE_OK);
             registerReceiver(connectivityReceiver, intentFilter); // implicitly init PeerGroup
         } catch (Error e){
-            e.printStackTrace();
+            log.error(e.toString(), e);
             Intent intent = new Intent(IntentsConstants.ACTION_STORED_BLOCKCHAIN_ERROR);
             broadcastManager.sendBroadcast(intent);
             throw e;
         } catch (Exception e){
             // todo: I have to handle the connection refused..
-            e.printStackTrace();
+            log.error(e.toString(), e);
             // for now i just launch a notification
             Intent intent = new Intent(IntentsConstants.ACTION_TRUSTED_PEER_CONNECTION_FAIL);
             broadcastManager.sendBroadcast(intent);
@@ -420,7 +418,7 @@ public class PivxWalletService extends Service{
                 try {
                     log.info("service init command: " + intent + (intent.hasExtra(Intent.EXTRA_ALARM_COUNT) ? " (alarm count: " + intent.getIntExtra(Intent.EXTRA_ALARM_COUNT, 0) + ")" : ""));
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    log.error(e.toString(), e);
                     log.info("service init command: " + intent + (intent.hasExtra(Intent.EXTRA_ALARM_COUNT) ? " (alarm count: " + intent.getLongArrayExtra(Intent.EXTRA_ALARM_COUNT) + ")" : ""));
                 }
                 final String action = intent.getAction();
@@ -446,7 +444,7 @@ public class PivxWalletService extends Service{
                 log.warn("service restart, although it was started as non-sticky");
             }
         }catch (Exception e){
-            e.printStackTrace();
+            log.error(e.toString(), e);
         }
         return START_NOT_STICKY;
     }
@@ -493,7 +491,7 @@ public class PivxWalletService extends Service{
             // schedule service it is not scheduled yet
             tryScheduleService();
         }catch (Exception e){
-            e.printStackTrace();
+            log.error(e.toString(), e);
         }
     }
 
@@ -532,41 +530,8 @@ public class PivxWalletService extends Service{
     }
 
     private void requestRateCoin(){
-        final AppConf appConf = pivxApplication.getAppConf();
-        PivxRate pivxRate = module.getRate(appConf.getSelectedRateCoin());
-        if (pivxRate==null || pivxRate.getTimestamp()+PivxContext.RATE_UPDATE_TIME<System.currentTimeMillis()){
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        CoinMarketCapApiClient c = new CoinMarketCapApiClient();
-                        CoinMarketCapApiClient.PivxMarket pivxMarket = c.getPivxPxrice();
-                        PivxRate pivxRate = new PivxRate("USD",pivxMarket.priceUsd,System.currentTimeMillis());
-                        module.saveRate(pivxRate);
-                        final PivxRate pivxBtcRate = new PivxRate("BTC",pivxMarket.priceBtc,System.currentTimeMillis());
-                        module.saveRate(pivxBtcRate);
-
-                        // Get the rest of the rates:
-                        List<PivxRate> rates = new CoinMarketCapApiClient.BitPayApi().getRates(new CoinMarketCapApiClient.BitPayApi.RatesConvertor<PivxRate>() {
-                            @Override
-                            public PivxRate convertRate(String code, String name, BigDecimal bitcoinRate) {
-                                BigDecimal rate = bitcoinRate.multiply(pivxBtcRate.getRate());
-                                return new PivxRate(code,rate,System.currentTimeMillis());
-                            }
-                        });
-
-                        for (PivxRate rate : rates) {
-                            module.saveRate(rate);
-                        }
-
-                    } catch (RequestPivxRateException e) {
-                        e.printStackTrace();
-                    } catch (Exception e){
-                        e.printStackTrace();
-                    }
-                }
-            }).start();
-        }
+        log.info("PivxWalletService->requestRateCoin");
+        module.requestRateCoin();
     }
 
     private AtomicBoolean isChecking = new AtomicBoolean(false);
@@ -588,7 +553,7 @@ public class PivxWalletService extends Service{
                 isChecking.set(false);
             }
         }catch (Exception e){
-            e.printStackTrace();
+            log.error(e.toString(), e);
             isChecking.set(false);
             broadcastBlockchainState(false);
         }

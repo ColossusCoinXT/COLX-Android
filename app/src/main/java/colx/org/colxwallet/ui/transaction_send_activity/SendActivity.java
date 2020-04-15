@@ -190,7 +190,8 @@ public class SendActivity extends BaseActivity implements View.OnClickListener {
         addAllPiv.setOnClickListener(this);
         pivxRate = pivxModule.getRate(pivxApplication.getAppConf().getSelectedRateCoin());
 
-        txt_local_currency.setText("0 " + pivxRate.getCode());
+        if (pivxRate != null)
+            txt_local_currency.setText("0 " + pivxRate.getCode());
 
         editCurrency.addTextChangedListener(new TextWatcher() {
             @Override

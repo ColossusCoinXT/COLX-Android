@@ -37,7 +37,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import chain.BlockchainManager;
+import colx.org.colxwallet.ColxApplication;
 import colx.org.colxwallet.LogHelper;
+import colx.org.colxwallet.rate.CoinMarketCapApiClient;
+import colx.org.colxwallet.utils.AppConf;
 import global.ContextWrapper;
 import global.ILogHelper;
 import global.WalletConfiguration;
@@ -61,24 +64,28 @@ public class PivxModuleImp implements PivxModule {
 
     private static final ILogHelper logger = LogHelper.getLogHelper(PivxModuleImp.class);
 
-    private ContextWrapper context;
+    private ColxApplication context;
     private WalletConfiguration walletConfiguration;
     private WalletManager walletManager;
     private BlockchainManager blockchainManager;
-    private PivtrumPeergroup peergroup;
     private ContactsStore contactsStore;
+    private PivtrumPeergroup peergroup;
     private RateDb rateDb;
 
     // cache balance
     private long availableBalance = 0;
     private BigDecimal pivInUsdHardcoded = new BigDecimal("1.5");
 
-    public PivxModuleImp(ContextWrapper contextWrapper, WalletConfiguration walletConfiguration,ContactsStore contactsStore,RateDb rateDb) {
-        this.context = contextWrapper;
+    public PivxModuleImp(
+            ColxApplication app,
+             WalletConfiguration walletConfiguration,
+             ContactsStore contactsStore,
+             RateDb rateDb) {
+        this.context = app;
         this.walletConfiguration = walletConfiguration;
         this.contactsStore = contactsStore;
         this.rateDb = rateDb;
-        walletManager = new WalletManager(LogHelper.getLogHelper(WalletManager.class), contextWrapper, walletConfiguration);
+        walletManager = new WalletManager(LogHelper.getLogHelper(WalletManager.class), app, walletConfiguration);
 
         blockchainManager = new BlockchainManager(
                 LogHelper.getLogHelper(BlockchainManager.class),
@@ -608,13 +615,13 @@ public class PivxModuleImp implements PivxModule {
             walletManager.replaceWallet(newWallet);
             return true;
         }catch (InterruptedException e) {
-            e.printStackTrace();
+            logger.error(e.toString(), e);
             throw new CantSweepBalanceException(e.getMessage(),e);
         } catch (ExecutionException e) {
-            e.printStackTrace();
+            logger.error(e.toString(), e);
             throw new CantSweepBalanceException(e.getMessage(),e);
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error(e.toString(), e);
             throw new CantSweepBalanceException(e.getMessage(),e);
         }
     }
@@ -624,9 +631,10 @@ public class PivxModuleImp implements PivxModule {
         try {
             return sweepBalanceToNewSchema();
         } catch (InsufficientMoneyException e) {
-            e.printStackTrace();
+            logger.error(e.toString(), e);
             throw new UpgradeException(e.getMessage(),e);
         } catch (CantSweepBalanceException e) {
+            logger.error(e.toString(), e);
             throw new UpgradeException(e.getMessage(),e);
         }
     }
@@ -641,6 +649,41 @@ public class PivxModuleImp implements PivxModule {
         return walletManager.getAvailableMnemonicWordsList();
     }
 
+    @Override
+    public void requestRateCoin() {
+        final AppConf appConf = context.getAppConf();
+        PivxRate pivxRate = getRate(appConf.getSelectedRateCoin());
+        if (pivxRate==null || pivxRate.getTimestamp()+PivxContext.RATE_UPDATE_TIME<System.currentTimeMillis()){
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        CoinMarketCapApiClient c = new CoinMarketCapApiClient();
+                        CoinMarketCapApiClient.PivxMarket pivxMarket = c.getPivxPxrice();
+                        PivxRate pivxRate = new PivxRate("USD",pivxMarket.priceUsd,System.currentTimeMillis());
+                        saveRate(pivxRate);
+                        final PivxRate pivxBtcRate = new PivxRate("BTC",pivxMarket.priceBtc,System.currentTimeMillis());
+                        saveRate(pivxBtcRate);
+
+                        // Get the rest of the rates:
+                        List<PivxRate> rates = new CoinMarketCapApiClient.BitPayApi().getRates(new CoinMarketCapApiClient.BitPayApi.RatesConvertor<PivxRate>() {
+                            @Override
+                            public PivxRate convertRate(String code, String name, BigDecimal bitcoinRate) {
+                                BigDecimal rate = bitcoinRate.multiply(pivxBtcRate.getRate());
+                                return new PivxRate(code,rate,System.currentTimeMillis());
+                            }
+                        });
+
+                        for (PivxRate rate : rates) {
+                            saveRate(rate);
+                        }
+                    } catch (Exception e){
+                        logger.error(e.toString(), e);
+                    }
+                }
+            }).start();
+        }
+    }
 
     public void saveRate(PivxRate pivxRate){
         rateDb.insertOrUpdateIfExist(pivxRate);

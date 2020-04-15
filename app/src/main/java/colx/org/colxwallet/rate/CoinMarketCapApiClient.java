@@ -1,5 +1,10 @@
 package colx.org.colxwallet.rate;
 
+import com.squareup.okhttp.HttpUrl;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.Response;
+
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
@@ -28,10 +33,7 @@ import colx.org.colxwallet.rate.db.PivxRate;
 
 public class CoinMarketCapApiClient {
 
-    private static final String URL = "https://api.coinmarketcap.com/v1/";
-
     public class PivxMarket{
-
         public BigDecimal priceUsd;
         public BigDecimal priceBtc;
         public BigDecimal marketCapUsd;
@@ -49,26 +51,38 @@ public class CoinMarketCapApiClient {
 
     public PivxMarket getPivxPxrice() throws RequestPivxRateException{
         try {
-            PivxMarket pivxMarket = null;
-            String url = this.URL + "ticker/colossuscoinxt/";
-            HttpResponse httpResponse = get(url);
-            // receive response as inputStream
-            InputStream inputStream = httpResponse.getEntity().getContent();
-            String result = null;
-            if (inputStream != null)
-                result = convertInputStreamToString(inputStream);
-            if (httpResponse.getStatusLine().getStatusCode()==200){
-                JSONArray jsonArray = new JSONArray(result);
-                JSONObject jsonObject = jsonArray.getJSONObject(0);
-                pivxMarket = new PivxMarket(
-                        new BigDecimal(jsonObject.getString("price_usd")),
-                        new BigDecimal(jsonObject.getString("price_btc")),
-                        new BigDecimal(jsonObject.getString("market_cap_usd")),
-                        new BigDecimal(jsonObject.getString("total_supply")),
-                        jsonObject.getInt("rank")
-                );
-            }
-            return pivxMarket;
+            String cryptoId = "2001";
+            String url = "https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest";
+            String resultUSD = makeCoinmarketAPICall(url, cryptoId, "USD");
+            String resultBTC = makeCoinmarketAPICall(url, cryptoId, "BTC");
+
+            JSONObject latestUsdJSON = new JSONObject(resultUSD);
+            if (!latestUsdJSON.has("data"))
+                return null;
+
+            JSONObject cryptoIdJSON = latestUsdJSON.getJSONObject("data").getJSONObject(cryptoId);
+            int rank = cryptoIdJSON.getInt("cmc_rank");
+            String totalSupply = cryptoIdJSON.getString("total_supply");
+
+            JSONObject usdJSON = cryptoIdJSON.getJSONObject("quote").getJSONObject("USD");
+            String priceUSD = usdJSON.getString("price");
+            String marketCapUSD = usdJSON.getString("market_cap");
+
+            String priceBTC = "0";
+            JSONObject latestBtcJSON = new JSONObject(resultBTC);
+            if (latestBtcJSON.has("data"))
+                priceBTC = latestBtcJSON.getJSONObject("data")
+                        .getJSONObject(cryptoId)
+                        .getJSONObject("quote")
+                        .getJSONObject("BTC")
+                        .getString("price");
+
+            return new PivxMarket(
+                    new BigDecimal(priceUSD),
+                    new BigDecimal(priceBTC),
+                    new BigDecimal(marketCapUSD),
+                    new BigDecimal(totalSupply),
+                    rank);
         } catch (ClientProtocolException e) {
             e.printStackTrace();
             throw new RequestPivxRateException(e);
@@ -79,6 +93,28 @@ public class CoinMarketCapApiClient {
             e.printStackTrace();
             throw new RequestPivxRateException(e);
         }
+    }
+
+    public static String makeCoinmarketAPICall(String addr, String cryptoId, String convert) throws IOException {
+        if (addr.isEmpty())
+            throw new IllegalArgumentException("addr");
+        if (cryptoId.isEmpty())
+            throw new IllegalArgumentException("cryptoId");
+
+        HttpUrl.Builder urlBuilder = HttpUrl.parse(addr).newBuilder();
+        urlBuilder.addQueryParameter("id", cryptoId);
+        urlBuilder.addQueryParameter("convert", convert.isEmpty() ? "USD" : convert);
+        String url = urlBuilder.build().toString();
+
+        Request request = new Request.Builder()
+                .header("Accept", "application/json")
+                .header("X-CMC_PRO_API_KEY", "ae725c04-bbd6-49cf-9190-67c49ff7672f")
+                .url(url)
+                .build();
+
+        OkHttpClient client = new OkHttpClient();
+        Response response = client.newCall(request).execute();
+        return response.body().string();
     }
 
     public static HttpResponse get(String url) throws IOException {
