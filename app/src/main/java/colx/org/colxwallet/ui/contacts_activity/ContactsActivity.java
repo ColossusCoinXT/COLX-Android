@@ -62,9 +62,12 @@ public class ContactsActivity extends BaseDrawerActivity implements ListItemList
     @Override
     protected void onResume() {
         super.onResume();
+
+        // Start service if it's not started otherwise no connection to the network
+        pivxApplication.startPivxService(null);
+
         // check current activity in the navigation drawer
         setNavigationMenuItemChecked(1);
-
     }
 
     @Override

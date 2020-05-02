@@ -214,13 +214,15 @@ public class PivxWalletService extends Service{
                     log.info("network is %s, state %s/%s", hasConnectivity ? "up" : "down", networkInfo.getState(), networkInfo.getDetailedState());
                     if (hasConnectivity)
                         impediments.remove(Impediment.NETWORK);
-                    else
+                    else {
+                        log.warn("impediments: no connection");
                         impediments.add(Impediment.NETWORK);
+                    }
                     check();
                     // try to request coin rate
                     requestRateCoin();
                 } else if (Intent.ACTION_DEVICE_STORAGE_LOW.equals(action)) {
-                    log.info("device storage low");
+                    log.warn("impediments: device storage low");
 
                     impediments.add(Impediment.STORAGE);
                     check();

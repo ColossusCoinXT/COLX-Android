@@ -135,6 +135,10 @@ public class SettingsActivity extends BaseDrawerActivity implements View.OnClick
     @Override
     protected void onResume() {
         super.onResume();
+
+        // Start service if it's not started otherwise no connection to the network
+        pivxApplication.startPivxService(null);
+
         // to check current activity in the navigation drawer
         setNavigationMenuItemChecked(2);
         updateNetworkStatus();
