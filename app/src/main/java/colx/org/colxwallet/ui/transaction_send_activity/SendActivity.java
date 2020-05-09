@@ -1,5 +1,6 @@
 package colx.org.colxwallet.ui.transaction_send_activity;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
@@ -9,6 +10,8 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.v4.content.ContextCompat;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -48,6 +51,7 @@ import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import colx.org.colxwallet.LogHelper;
 import colx.org.colxwallet.R;
@@ -130,6 +134,7 @@ public class SendActivity extends BaseActivity implements View.OnClickListener {
     private SimpleTextDialog errorDialog;
     private ImageButton btnSwap;
     private ViewFlipper amountSwap;
+    private ProgressDialog progressBar;
 
     private boolean inPivs = true;
     private Transaction transaction;
@@ -389,9 +394,43 @@ public class SendActivity extends BaseActivity implements View.OnClickListener {
         int id = v.getId();
         if (id == R.id.btnSend){
             try {
-                if (checkConnectivity()){
-                    send(false);
+                if (!isOnline() && isNetworkUp()) {
+                    logger.debug("wallet is offline, trying connect to peers");
+
+                    pivxApplication.startPivxService(null);
+
+                    progressBar = new ProgressDialog(this);
+                    progressBar.setMessage("Connecting to peers...");
+                    progressBar.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+                    progressBar.setIndeterminate(true);
+                    progressBar.show();
+
+                    new Thread(new Runnable() {
+                        public void run() {
+                                try {
+                                    for (int i = 0; i < 5; i += 1) {
+                                        if (isOnline())
+                                            break;
+                                        else
+                                            Thread.sleep(1000);
+                                    }
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                } finally {
+                                    progressBar.dismiss();
+                                    new Handler(Looper.getMainLooper()).post(new Runnable() { // Tried new Handler(Looper.myLopper()) also
+                                        @Override
+                                        public void run() {
+                                            if (checkConnectivity())
+                                                send(false);
+                                        }
+                                    });
+                                }
+                            }
+                        }).start();
                 }
+                else if (checkConnectivity())
+                    send(false);
             }catch (IllegalArgumentException e){
                 e.printStackTrace();
                 showErrorDialog(e.getMessage());
@@ -493,12 +532,15 @@ public class SendActivity extends BaseActivity implements View.OnClickListener {
     }
 
     public boolean isOnline() {
+        return pivxModule.isAnyPeerConnected();
+    }
+
+    public boolean isNetworkUp() {
         ConnectivityManager cm =
                 (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo netInfo = cm.getActiveNetworkInfo();
         return netInfo != null && netInfo.isConnectedOrConnecting();
     }
-
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {

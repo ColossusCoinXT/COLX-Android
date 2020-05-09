@@ -306,8 +306,12 @@ public class PivxModuleImp implements PivxModule {
 
     @Override
     public boolean isAnyPeerConnected() {
-        List<Peer> peers = blockchainManager.getConnectedPeers();
-        return (blockchainManager != null && peers != null) && !peers.isEmpty();
+        if (blockchainManager != null) {
+            List<Peer> peers = blockchainManager.getConnectedPeers();
+            return (peers != null) && !peers.isEmpty();
+        }
+        else
+            return false;
     }
 
     @Override
