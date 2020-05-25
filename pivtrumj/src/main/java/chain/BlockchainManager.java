@@ -3,6 +3,7 @@ package chain;
 import com.google.common.base.Stopwatch;
 import com.google.common.util.concurrent.ListenableFuture;
 
+import org.colxj.core.Context;
 import org.colxj.core.BlockChain;
 import org.colxj.core.CheckpointManager;
 import org.colxj.core.Peer;
@@ -243,10 +244,11 @@ public class BlockchainManager {
                 LOG.info("starting peergroup");
                 peerGroup = new PeerGroup(conf.getNetworkParams(), blockChain);
                 peerGroup.setDownloadTxDependencies(0); // recursive implementation causes StackOverflowError
-                walletManager.addWalletFrom(peerGroup);
                 peerGroup.setUserAgent(USER_AGENT, context.getVersionName());
                 peerGroup.addConnectedEventListener(peerConnectivityListener);
                 peerGroup.addDisconnectedEventListener(peerDisconnectedEventListener);
+                walletManager.addWalletFrom(peerGroup);
+                Context.get().setPeerGroupAndBlockChain(peerGroup, blockChain);
 
                 // Memory check
                 final int maxConnectedPeers = context.isMemoryLow() ? 4 : 6 ;

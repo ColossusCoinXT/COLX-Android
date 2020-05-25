@@ -62,9 +62,8 @@
         <activity android:name=".ui.settings_node_activity.SettingsNodeActivity"  android:screenOrientation="portrait"/>
         <activity android:name=".ui.start_node_activity.StartNodeActivity"  android:screenOrientation="portrait"/>
         <activity android:name=".ui.restore_activity.RestoreActivity"  android:screenOrientation="portrait"/>
-        <activity android:name=".ui.pincode_activity.PincodeActivity"  android:screenOrientation="portrait">
-
-        </activity>
+        <activity android:name=".ui.pincode_activity.PincodeActivity"  android:screenOrientation="portrait"/>
+        <activity android:name=".ui.spork_manager_activity.SporkManagerActivity"  android:screenOrientation="portrait"/>
 
         <activity android:name=".ui.transaction_detail_activity.TransactionDetailActivity"
             android:screenOrientation="portrait"

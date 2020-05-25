@@ -2,6 +2,7 @@ package colx.org.colxwallet.module;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
+import org.colxj.core.Context;
 import org.colxj.core.Address;
 import org.colxj.core.Coin;
 import org.colxj.core.InsufficientMoneyException;
@@ -20,8 +21,6 @@ import org.colxj.wallet.DeterministicKeyChain;
 import org.colxj.wallet.SendRequest;
 import org.colxj.wallet.Wallet;
 import org.colxj.wallet.listeners.WalletCoinsReceivedEventListener;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -41,7 +40,6 @@ import colx.org.colxwallet.ColxApplication;
 import colx.org.colxwallet.LogHelper;
 import colx.org.colxwallet.rate.CoinMarketCapApiClient;
 import colx.org.colxwallet.utils.AppConf;
-import global.ContextWrapper;
 import global.ILogHelper;
 import global.WalletConfiguration;
 import pivtrum.PivtrumPeergroup;
@@ -691,5 +689,10 @@ public class PivxModuleImp implements PivxModule {
 
     public void saveRate(PivxRate pivxRate){
         rateDb.insertOrUpdateIfExist(pivxRate);
+    }
+
+    @Override
+    public ArrayList<String> getSporkList() {
+        return Context.get().sporkManager.getSporkList();
     }
 }

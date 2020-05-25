@@ -16,6 +16,8 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.colxj.core.SporkManager;
+
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -32,6 +34,7 @@ import colx.org.colxwallet.ui.settings_backup_activity.SettingsBackupActivity;
 import colx.org.colxwallet.ui.settings_network_activity.SettingsNetworkActivity;
 import colx.org.colxwallet.ui.settings_pincode_activity.SettingsPincodeActivity;
 import colx.org.colxwallet.ui.settings_rates.SettingsRatesActivity;
+import colx.org.colxwallet.ui.spork_manager_activity.SporkManagerActivity;
 import colx.org.colxwallet.ui.start_node_activity.StartNodeActivity;
 import colx.org.colxwallet.ui.tutorial_activity.TutorialActivity;
 import colx.org.colxwallet.utils.CrashReporter;
@@ -64,6 +67,7 @@ public class SettingsActivity extends BaseDrawerActivity implements View.OnClick
     private Button buttonTutorial;
     private TextView textAbout, text_rates;
     private TextView txt_network_info;
+    private Button btn_sporks;
 
     @Override
     protected void onCreateView(Bundle savedInstanceState, ViewGroup container) {
@@ -120,6 +124,10 @@ public class SettingsActivity extends BaseDrawerActivity implements View.OnClick
         // Open Tutorial
         buttonTutorial = (Button) findViewById(R.id.btn_tutorial);
         buttonTutorial.setOnClickListener(this);
+
+        // List sporks
+        btn_sporks = (Button) findViewById(R.id.btn_sporks);
+        btn_sporks.setOnClickListener(this);
 
         // Video Switch
         videoSwitch = (Switch) findViewById(R.id.videoSwitch);
@@ -197,6 +205,8 @@ public class SettingsActivity extends BaseDrawerActivity implements View.OnClick
             startActivity(new Intent(v.getContext(), SettingsWatchOnly.class));
         }else if (id == R.id.btn_rates){
             startActivity(new Intent(v.getContext(), SettingsRatesActivity.class));
+        }else if (id == R.id.btn_sporks){
+            startActivity(new Intent(v.getContext(), SporkManagerActivity.class));
         }
     }
 
@@ -267,6 +277,7 @@ public class SettingsActivity extends BaseDrawerActivity implements View.OnClick
         };
         dialog.show();
     }
+
     @Override
     protected void onBlockchainStateChange() {
         updateNetworkStatus();

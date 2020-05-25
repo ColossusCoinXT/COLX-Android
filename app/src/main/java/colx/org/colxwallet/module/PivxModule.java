@@ -16,6 +16,7 @@ import org.colxj.wallet.Wallet;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -170,4 +171,6 @@ public interface PivxModule {
     List<String> getAvailableMnemonicWordsList();
 
     void requestRateCoin();
+
+    ArrayList<String> getSporkList();
 }
