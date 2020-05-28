@@ -173,4 +173,8 @@ public interface PivxModule {
     void requestRateCoin();
 
     ArrayList<String> getSporkList();
+
+    boolean isMinimumFeeRequired();
+
+    Coin getMinimumFeeRequired();
 }

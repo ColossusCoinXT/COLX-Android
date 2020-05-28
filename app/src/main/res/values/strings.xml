@@ -361,6 +361,7 @@
     <string name="advance_restore">Advanced restore</string>
     <string name="restore_bip32_warning">If your mnemonic code was created by this wallet on a version lower than %s please check the next box to restore your coins correctly.</string>
     <string name="fee_included">Fee is not included on the total amount</string>
+    <string name="fee_spork_warning">Network spork is active. Minimum required fee is </string>
     <string name="title_blockstore_error">Error</string>
     <string name="message_blockstore_error">Blockchain store corrupted\n\nPlease send the error report and try to restore the wallet from the mnemonic code or the backup file.</string>
     <string name="upgrade_wallet">Upgrade Wallet</string>

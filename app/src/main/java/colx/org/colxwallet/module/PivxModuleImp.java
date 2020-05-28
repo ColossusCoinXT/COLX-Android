@@ -9,6 +9,7 @@ import org.colxj.core.InsufficientMoneyException;
 import org.colxj.core.Peer;
 import org.colxj.core.ScriptException;
 import org.colxj.core.Sha256Hash;
+import org.colxj.core.SporkManager;
 import org.colxj.core.Transaction;
 import org.colxj.core.TransactionConfidence;
 import org.colxj.core.TransactionInput;
@@ -697,5 +698,16 @@ public class PivxModuleImp implements PivxModule {
     @Override
     public ArrayList<String> getSporkList() {
         return Context.get().sporkManager.getSporkList();
+    }
+
+    @Override
+    public boolean isMinimumFeeRequired() {
+        return Context.get().sporkManager.isSporkActive(SporkManager.SPORK_21_ENFORCE_MIN_TX_FEE);
+    }
+
+    @Override
+    public Coin getMinimumFeeRequired() {
+        long coin = Context.get().sporkManager.getSporkValue(SporkManager.SPORK_22_TX_FEE_VALUE);
+        return Coin.valueOf((int)coin, 0);
     }
 }

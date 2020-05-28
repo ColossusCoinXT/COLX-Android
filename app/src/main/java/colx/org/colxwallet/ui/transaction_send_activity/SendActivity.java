@@ -282,6 +282,16 @@ public class SendActivity extends BaseActivity implements View.OnClickListener {
                 edit_memo.setText(memo);
         }
 
+        // warn user about minimum fee if spork is active
+        TextView tvSporkWarning = (TextView) root.findViewById(R.id.txt_spork_warning);
+        if (tvSporkWarning != null) {
+            if (pivxModule.isMinimumFeeRequired()) {
+                Coin feeAmount = pivxModule.getMinimumFeeRequired();
+                String feeLabel = tvSporkWarning.getText() + " " + feeAmount.toFriendlyString();
+                tvSporkWarning.setText(feeLabel);
+                tvSporkWarning.setVisibility(View.VISIBLE);
+            }
+        }
     }
 
     @Override
