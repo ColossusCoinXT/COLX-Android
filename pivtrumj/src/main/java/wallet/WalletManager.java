@@ -280,14 +280,14 @@ public class WalletManager {
         }
     }
 
-    public void restoreWalletFrom(List<String> mnemonic, long timestamp, boolean bip44) throws IOException, MnemonicException {
+    public void restoreWalletFrom(List<String> mnemonic, long timestamp, boolean bip44, boolean stopBlockchain) throws IOException, MnemonicException {
         MnemonicCode.INSTANCE.check(mnemonic);
         wallet = Wallet.fromSeed(
                 conf.getNetworkParams(),
                 new DeterministicSeed(mnemonic,null,"",timestamp),
                 bip44? DeterministicKeyChain.KeyChainType.BIP44_PIVX_ONLY: DeterministicKeyChain.KeyChainType.BIP32
         );
-        restoreWallet(wallet);
+        restoreWallet(wallet, stopBlockchain);
     }
 
     /**
@@ -455,11 +455,11 @@ public class WalletManager {
     }
 
 
-    public void restoreWalletFromProtobuf(final File file) throws IOException {
+    public void restoreWalletFromProtobuf(final File file, boolean stopBlockchain) throws IOException {
         FileInputStream is = null;
         try {
             is = new FileInputStream(file);
-            restoreWallet(WalletUtils.restoreWalletFromProtobuf(is, conf.getNetworkParams()));
+            restoreWallet(WalletUtils.restoreWalletFromProtobuf(is, conf.getNetworkParams()), stopBlockchain);
             logger.info("successfully restored unencrypted wallet: {}", file);
         } finally {
             if (is != null) {
@@ -472,19 +472,13 @@ public class WalletManager {
         }
     }
 
-    private void restoreWallet(final Wallet wallet) throws IOException {
-
-        replaceWallet(wallet);
-
-        //config.disarmBackupReminder();
-        // en vez de hacer esto acá hacerlo en el module..
-        /*if (listener!=null)
-            listener.onWalletRestored();*/
-
+    private void restoreWallet(final Wallet wallet, boolean stopBlockchain) throws IOException {
+        replaceWallet(wallet, stopBlockchain);
     }
 
-    public void replaceWallet(final Wallet newWallet) throws IOException {
-        resetBlockchain();
+    public void replaceWallet(final Wallet newWallet, boolean stopBlockchain) throws IOException {
+        if (stopBlockchain)
+            resetBlockchain();
 
         try {
             wallet.shutdownAutosaveAndWait();
@@ -505,7 +499,7 @@ public class WalletManager {
         contextWrapper.stopBlockchain();
     }
 
-    public void restoreWalletFromEncrypted(File file, String password) throws IOException {
+    public void restoreWalletFromEncrypted(File file, String password, boolean stopBlockchain) throws IOException {
         final BufferedReader cipherIn = new BufferedReader(new InputStreamReader(new FileInputStream(file), Charsets.UTF_8));
         final StringBuilder cipherText = new StringBuilder();
         Io.copy(cipherIn, cipherText, conf.getBackupMaxChars());
@@ -514,7 +508,7 @@ public class WalletManager {
         final byte[] plainText = Crypto.decryptBytes(cipherText.toString(), password.toCharArray());
         final InputStream is = new ByteArrayInputStream(plainText);
 
-        restoreWallet(WalletUtils.restoreWalletFromProtobufOrBase58(is, conf.getNetworkParams(), conf.getBackupMaxChars()));
+        restoreWallet(WalletUtils.restoreWalletFromProtobufOrBase58(is, conf.getNetworkParams(), conf.getBackupMaxChars()), stopBlockchain);
 
         logger.info("successfully restored encrypted wallet: {}", file);
     }
@@ -525,7 +519,7 @@ public class WalletManager {
      */
     public void watchOnlyMode(String xpub, DeterministicKeyChain.KeyChainType keyChainType) throws IOException {
         Wallet wallet = Wallet.fromWatchingKeyB58(conf.getNetworkParams(),xpub,0,keyChainType);
-        restoreWallet(wallet);
+        restoreWallet(wallet, true);
     }
 
     public Set<Transaction> listTransactions() {

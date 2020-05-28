@@ -53,11 +53,11 @@ public interface PivxModule {
      *
      * @param backupFile
      */
-    void restoreWallet(File backupFile) throws IOException;
+    void restoreWallet(File backupFile, boolean stopBlockchain) throws IOException;
 
-    void restoreWalletFromEncrypted(File file, String password) throws CantRestoreEncryptedWallet, IOException;
+    void restoreWalletFromEncrypted(File file, String password, boolean stopBlockchain) throws CantRestoreEncryptedWallet, IOException;
 
-    void restoreWallet(List<String> mnemonic, long timestamp,boolean bip44) throws IOException, MnemonicException;
+    void restoreWallet(List<String> mnemonic, long timestamp, boolean bip44, boolean stopBlockchain) throws IOException, MnemonicException;
 
     /**
      * If the wallet already exist

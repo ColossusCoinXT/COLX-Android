@@ -79,6 +79,8 @@ public class RestoreActivity extends BaseActivity {
         int id = item.getItemId();
         if (id == OPTIONS_RESTORE){
             Intent myIntent = new Intent(getApplicationContext(), RestoreWordsActivity.class);
+            if (jumpToWizard)
+                myIntent.setAction(ACTION_RESTORE_AND_JUMP_TO_WIZARD);
             startActivity(myIntent);
             return true;
         }
@@ -172,13 +174,13 @@ public class RestoreActivity extends BaseActivity {
                         org.colxj.core.Context.propagate(PivxContext.CONTEXT);
                         File file = (File) spinnerFiles.getSelectedItem();
                         if (WalletUtils.BACKUP_FILE_FILTER.accept(file)) {
-                            pivxModule.restoreWallet(file);
+                            pivxModule.restoreWallet(file, !jumpToWizard);
                             showRestoreSucced();
                         } else if (KEYS_FILE_FILTER.accept(file)) {
                             //module.restorePrivateKeysFromBase58(file);
                         } else if (Crypto.OPENSSL_FILE_FILTER.accept(file)) {
                             try {
-                                pivxModule.restoreWalletFromEncrypted(file, password);
+                                pivxModule.restoreWalletFromEncrypted(file, password, !jumpToWizard);
                                 showRestoreSucced();
                             } catch (final CantRestoreEncryptedWallet x) {
                                 runOnUiThread(new Runnable() {

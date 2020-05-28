@@ -118,19 +118,22 @@ public class PivxModuleImp implements PivxModule {
     }
 
     @Override
-    public void restoreWallet(File backupFile) throws IOException {
+    public void restoreWallet(File backupFile, boolean stopBlockchain) throws IOException {
         // restore wallet and launch the restart of the blockchain...
-        walletManager.restoreWalletFromProtobuf(backupFile);
+        logger.debug("{}, stopBlockchain = {}", this, stopBlockchain);
+        walletManager.restoreWalletFromProtobuf(backupFile, stopBlockchain);
     }
 
     @Override
-    public void restoreWalletFromEncrypted(File file, String password) throws IOException {
-        walletManager.restoreWalletFromEncrypted(file,password);
+    public void restoreWalletFromEncrypted(File file, String password, boolean stopBlockchain) throws IOException {
+        logger.debug("{}, stopBlockchain = {}", this, stopBlockchain);
+        walletManager.restoreWalletFromEncrypted(file, password, stopBlockchain);
     }
 
     @Override
-    public void restoreWallet(List<String> mnemonic, long timestamp,boolean bip44) throws IOException, MnemonicException {
-        walletManager.restoreWalletFrom(mnemonic,timestamp,bip44);
+    public void restoreWallet(List<String> mnemonic, long timestamp, boolean bip44, boolean stopBlockchain) throws IOException, MnemonicException {
+        logger.debug("{}, stopBlockchain = {}", this, stopBlockchain);
+        walletManager.restoreWalletFrom(mnemonic, timestamp, bip44, stopBlockchain);
     }
 
     @Override
@@ -614,7 +617,7 @@ public class PivxModuleImp implements PivxModule {
                 logger.error("ERROR, Upgrade wallet tx confidence not accepted by the network {}",confidence);
             }
             // change wallet
-            walletManager.replaceWallet(newWallet);
+            walletManager.replaceWallet(newWallet, true);
             return true;
         }catch (InterruptedException e) {
             logger.error(e.toString(), e);

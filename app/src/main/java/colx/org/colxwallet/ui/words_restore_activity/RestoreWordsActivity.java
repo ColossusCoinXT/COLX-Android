@@ -49,6 +49,7 @@ import static colx.org.colxwallet.module.PivxContext.PIVX_WALLET_APP_RELEASED_ON
  */
 
 public class RestoreWordsActivity extends BaseActivity {
+    public static final String ACTION_RESTORE_AND_JUMP_TO_WIZARD = "jump_to_wizard";
     private View root;
     private ViewPager viewPager;
     private RestoreWordsActivity.ViewPagerAdapter viewPagerAdapter;
@@ -66,6 +67,8 @@ public class RestoreWordsActivity extends BaseActivity {
     private List<String> mnemonicWords;
 
     private ExecutorService executorService;
+
+    private boolean jumpToWizard = false;
 
     @Override
     protected void onCreateView(Bundle savedInstanceState, ViewGroup container) {
@@ -100,6 +103,15 @@ public class RestoreWordsActivity extends BaseActivity {
         mnemonicWords = pivxModule.getAvailableMnemonicWordsList();
         mnemonicAdapter =  new ArrayAdapter<String>
                 (this, android.R.layout.select_dialog_item, mnemonicWords);
+
+        // intent
+        if (getIntent()!=null){
+            if (getIntent().getAction()!=null) {
+                if (getIntent().getAction().equals(ACTION_RESTORE_AND_JUMP_TO_WIZARD)){
+                    jumpToWizard = true;
+                }
+            }
+        }
     }
 
     public void btnBackClick(View v) {
@@ -218,7 +230,7 @@ public class RestoreWordsActivity extends BaseActivity {
 
                                             boolean isBip32 = check_bip32.isChecked();
 
-                                            pivxModule.restoreWallet(mnemonic, PIVX_WALLET_APP_RELEASED_ON_PLAY_STORE_TIME,!isBip32);
+                                            pivxModule.restoreWallet(mnemonic, PIVX_WALLET_APP_RELEASED_ON_PLAY_STORE_TIME, !isBip32, !jumpToWizard);
 
                                             message = getString(R.string.restore_mnemonic);
                                             result = true;
