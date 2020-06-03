@@ -108,7 +108,7 @@ public class PivxWalletService extends Service{
     private LocalBroadcastManager broadcastManager;
 
     private SnappyBlockchainStore blockchainStore;
-    private boolean resetBlockchainOnShutdown = false;
+    private AtomicBoolean  resetBlockchainOnShutdown = new AtomicBoolean(false);;
     /** Created service time (just for checks) */
     private long serviceCreatedAt;
     /** Cached amount to notify balance */
@@ -431,14 +431,8 @@ public class PivxWalletService extends Service{
                     nm.cancel(NOT_COINS_RECEIVED);
                 } else if (ACTION_RESET_BLOCKCHAIN.equals(action)) {
                     log.info("will remove blockchain on service shutdown");
-                    resetBlockchainOnShutdown = true;
-
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        stopForeground(true);
-                    } else {
-                        stopSelf();
-                    }
-
+                    resetBlockchainOnShutdown.set(true);
+                    stopSelf();
                 } else if (ACTION_BROADCAST_TRANSACTION.equals(action)) {
                     blockchainManager.broadcastTransaction(intent.getByteArrayExtra(DATA_TRANSACTION_HASH));
                 }
@@ -470,19 +464,7 @@ public class PivxWalletService extends Service{
             module.removeCoinsReceivedEventListener(coinReceiverListener);
             module.removeTransactionsConfidenceChange(transactionConfidenceEventListener);
             blockchainManager.removeBlockchainDownloadListener(blockchainDownloadListener);
-            // destroy the blockchain
-            /*if (resetBlockchainOnShutdown){
-                try {
-                    blockchainStore.truncate();
-                }catch (Exception e){
-                    e.printStackTrace();
-                }
-            }*/
-            blockchainManager.destroy(resetBlockchainOnShutdown);
-
-            /*if (pivtrumPeergroup.isRunning()) {
-                pivtrumPeergroup.shutdown();
-            }*/
+            blockchainManager.destroy(resetBlockchainOnShutdown.get());
 
             if (wakeLock.isHeld()) {
                 log.debug("wakelock still held, releasing");
@@ -490,10 +472,14 @@ public class PivxWalletService extends Service{
             }
 
             log.info("service was up for " + ((System.currentTimeMillis() - serviceCreatedAt) / 1000 / 60) + " minutes");
-            // schedule service it is not scheduled yet
-            tryScheduleService();
         }catch (Exception e){
             log.error(e.toString(), e);
+        } finally {
+            // schedule service it is not scheduled yet
+            tryScheduleService();
+            // restart service after reset
+            if (resetBlockchainOnShutdown.get())
+                startService(new Intent(this, PivxWalletService.class));
         }
     }
 
@@ -506,9 +492,8 @@ public class PivxWalletService extends Service{
         if (!isSchedule){
             log.info("scheduling service");
             AlarmManager alarm = (AlarmManager)getSystemService(ALARM_SERVICE);
-            long scheduleTime = System.currentTimeMillis() + 2000*60;//(1000 * 60 * 60); // One hour from now
             Date now = new Date();
-            scheduleTime = now.getTime() + 2 * 1000 * 60;//(1000 * 60 * 60); // One hour from now
+            long scheduleTime = now.getTime() + 2 * 1000 * 60;//(1000 * 60 * 60); // One hour from now
 
             Intent intent = new Intent(this, PivxWalletService.class);
             intent.setAction(ACTION_SCHEDULE_SERVICE);

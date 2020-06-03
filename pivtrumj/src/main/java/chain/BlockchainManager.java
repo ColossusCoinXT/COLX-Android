@@ -200,13 +200,17 @@ public class BlockchainManager {
 //            peerGroup.removeConnectedEventListener(peerConnectivityListener);
             walletManager.removeWalletFrom(peerGroup);
             if (peerGroup.isRunning())
-                peerGroup.stopAsync();
+                peerGroup.stop();
             peerGroup = null;
             LOG.info("peergroup stopped, reset blockchain: " + resetBlockchainOnShutdown);
         }
 
         try {
-            blockStore.close();
+            if (resetBlockchainOnShutdown) {
+                LOG.info("removing blockchain");
+                blockStore.reset();
+            } else
+                blockStore.close();
         } catch (final BlockStoreException x) {
             LOG.error(x.getMessage(), x);
             throw new RuntimeException(x);
@@ -214,13 +218,6 @@ public class BlockchainManager {
 
         // save the wallet
         walletManager.saveWallet();
-
-        if (resetBlockchainOnShutdown) {
-            LOG.info("removing blockchain");
-            blockChainFile.delete();
-            blockChain=null;
-            blockStore=null;
-        }
     }
 
     public void check(Set<Impediment> impediments, PeerConnectedEventListener peerConnectivityListener, PeerDisconnectedEventListener peerDisconnectedEventListener , PeerDataEventListener blockchainDownloadListener){

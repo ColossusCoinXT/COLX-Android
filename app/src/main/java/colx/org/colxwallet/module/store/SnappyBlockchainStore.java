@@ -158,6 +158,17 @@ public class SnappyBlockchainStore implements BlockStore{
     }
 
     @Override
+    public synchronized void reset() throws BlockStoreException {
+        try {
+            log.trace("SnappyBlockchainStore::reset");
+            db.destroy();
+        } catch (SnappydbException e) {
+            log.error(e.getMessage(), e);
+            throw new BlockStoreException(e);
+        }
+    }
+
+    @Override
     public NetworkParameters getParams() {
         return context.getParams();
     }
