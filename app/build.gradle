@@ -7,8 +7,8 @@ android {
         applicationId "colx.tech.team"
         minSdkVersion 21
         targetSdkVersion 28
-        versionCode 26
-        versionName "1.0.7"
+        versionCode 33
+        versionName "1.2.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
     }
